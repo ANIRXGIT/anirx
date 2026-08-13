@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { disciplines, identity } from "@/content/identity";
+import { disciplines } from "@/content/identity";
 import { gsap } from "@/motion/gsap";
 import { useReducedMotion } from "@/motion/useReducedMotion";
 
@@ -233,7 +233,7 @@ export function SceneWorlds() {
       </article>
 
       {/* WHAT I DO — the quiet editorial list, after the world rooms */}
-      <article data-world="do" aria-label="What I do" className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-[var(--spacing-gutter)]">
+      <article id="what-i-do" data-world="do" aria-label="What I do" className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-[var(--spacing-gutter)]">
         <div className="world-env" aria-hidden />
         <h3 className="sr-only">What I do</h3>
         <div className="relative max-w-[860px]">
@@ -261,7 +261,7 @@ export function SceneWorlds() {
       {/* chapter close */}
       <div data-w-statement className="flex min-h-[85svh] flex-col items-center justify-center px-[var(--spacing-gutter)] text-center">
         <span className="max-w-[18ch] font-edit text-3xl italic leading-snug text-ink md:text-5xl">
-          {identity.statement}
+          This is how the work gets made.
         </span>
       </div>
     </section>

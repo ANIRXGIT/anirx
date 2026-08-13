@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { identity } from "@/content/identity";
-import { site } from "@/content/site";
 import { gsap } from "@/motion/gsap";
 import { useReducedMotion } from "@/motion/useReducedMotion";
 
@@ -48,6 +47,7 @@ export function SceneSignature() {
     <>
       <section
         ref={ref}
+        id="anirx-signature"
         aria-label="ANIRX"
         className="relative flex min-h-[96svh] flex-col items-center justify-center overflow-hidden border-t border-line px-[var(--spacing-gutter)] py-20 text-center"
       >
@@ -59,6 +59,7 @@ export function SceneSignature() {
             data-s-fill
             aria-hidden
             className="absolute inset-0 block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight text-ink"
+            style={{ clipPath: "inset(100% 0% 0% 0%)" }}
           >
             ANIRX<span className="text-accent-hi">.</span>
           </span>
@@ -67,7 +68,7 @@ export function SceneSignature() {
           {identity.fullName}
         </p>
         <p data-s-statement className="mt-3 font-edit text-lg italic text-ink-dim md:text-xl">
-          {site.statement}
+          Creative technologist. This is the world.
         </p>
       </section>
 
@@ -76,7 +77,7 @@ export function SceneSignature() {
         <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">
           © {new Date().getFullYear()} ANIRUDH SHARMA — ANIRX.IN
         </p>
-        <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">TOO CURIOUS TO STAY IN ONE LANE.</p>
+        <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">ANIRX — ALL RIGHTS RESERVED</p>
       </footer>
     </>
   );
