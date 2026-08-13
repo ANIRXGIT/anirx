@@ -2,74 +2,56 @@ import { portrait } from "@/content/identity";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 
 /**
- * THE OBJECT — the visual identity of ANIRX. (v5)
- *
- * Seven plates standing in depth: a monolith that can open.
- * The person lives inside the stack and only appears when the
- * object opens — never a photo pinned to the page.
- *
- * Rendered by the server, fully formed (SSR/no-JS = closed monolith).
- * GSAP only transforms it from the poses below — one source of truth.
+ * THE PORTRAIT PANELS — the hero's layered composition.
+ * One upright portrait standing between two tilted dark plates.
+ * The arrangement is the SSR resting state; the intro only brings
+ * the panels in from the dark and lifts the veil off the portrait.
  */
 
-export const PLATE_COUNT = 7;
-export const CENTER = 3; // plate 04 of 07 — the person within the stack
+export const PANEL_COUNT = 3;
+export const PORTRAIT_PANEL = 1;
 
-export type PlatePose = { x: number; y: number; z: number; ry: number };
+export type PanelPose = {
+  /** percent of the panel's own width */
+  x: number;
+  /** px offset within the stack */
+  y: number;
+  z: number;
+  ry: number;
+  rz: number;
+};
 
-/** At rest — the closed monolith. */
-export function closedPose(i: number): PlatePose {
-  return { x: (i - CENTER) * 9, y: 0, z: (CENTER - i) * 17, ry: 0 };
-}
-
-/** The shrine opens — outer plates part, the portrait advances. */
-export function openPose(i: number): PlatePose {
-  if (i === CENTER) return { x: 0, y: 0, z: 110, ry: 0 };
-  if (i < CENTER) {
-    return { x: -(CENTER - i) * 46 - 30, y: 0, z: (CENTER - i) * 17, ry: -(6 + (CENTER - i) * 4) };
+export function restPose(i: number): PanelPose {
+  switch (i) {
+    case 0:
+      return { x: -58, y: -18, z: -130, ry: 0, rz: -3.2 };
+    case 2:
+      return { x: 58, y: -6, z: -165, ry: 0, rz: 2.4 };
+    default:
+      return { x: 0, y: 0, z: 0, ry: 0, rz: 0.6 };
   }
-  return { x: (i - CENTER) * 46 + 30, y: 0, z: (CENTER - i) * 17, ry: 6 + (i - CENTER) * 4 };
 }
 
-export function poseToTransform(p: PlatePose): string {
-  return `translateX(${p.x}px) translateY(${p.y}px) translateZ(${p.z}px) rotateY(${p.ry}deg)`;
+export function poseToTransform(p: PanelPose): string {
+  return `translateX(${p.x}%) translateY(${p.y}px) translateZ(${p.z}px) rotateY(${p.ry}deg) rotateZ(${p.rz}deg)`;
 }
-
-/**
- * The object belongs to the hero's identity moment — it does not tour
- * the page. The worlds that follow are environments of light and type,
- * not poses of this body. */
-
 
 export function AnirxObject({ className = "" }: { className?: string }) {
   return (
     <div className={`obj-stage ${className}`} data-obj-stage aria-hidden="true">
-      {/* the X of light the monolith stands against */}
-      <div className="obj-light-blade obj-light-a" data-obj-blade-a />
-      <div className="obj-light-blade obj-light-b" data-obj-blade-b />
-
       <div className="obj-tilt" data-obj-tilt>
         <div className="obj-spin" data-obj-spin>
-          {/* the pool of light the object stands in */}
+          {/* the pool of light the panels stand in */}
           <div className="obj-floor" data-obj-floor />
-          {Array.from({ length: PLATE_COUNT }, (_, i) => (
+          {Array.from({ length: PANEL_COUNT }, (_, i) => (
             <div
               key={i}
-              className="obj-plate"
+              className={`obj-plate${i !== PORTRAIT_PANEL ? " obj-plate--dark" : ""}`}
               data-obj-plate={i}
-              style={{
-                transform: poseToTransform(closedPose(i)),
-                ["--i" as string]: i,
-                ["--g" as string]: 1 - Math.abs(i - CENTER) / CENTER,
-              }}
+              style={{ transform: poseToTransform(restPose(i)) }}
             >
-              {i === 0 && (
-                <span className="obj-x" aria-hidden="true">
-                  <span />
-                  <span />
-                </span>
-              )}
-              {i === CENTER && (
+              {i !== PORTRAIT_PANEL && <span className="obj-panel-cut" aria-hidden="true" />}
+              {i === PORTRAIT_PANEL && (
                 <span className="obj-portrait" data-obj-portrait>
                   <MediaSlot
                     asset={portrait}
