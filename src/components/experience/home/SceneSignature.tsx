@@ -45,29 +45,39 @@ export function SceneSignature() {
   }, [reduced]);
 
   return (
-    <section
-      ref={ref}
-      aria-label="ANIRX"
-      className="relative flex min-h-[96svh] flex-col items-center justify-center overflow-hidden border-t border-line px-[var(--spacing-gutter)] py-20 text-center"
-    >
-      <div data-s-word className="relative select-none will-change-transform">
-        <span className="u-hollow block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight">
-          ANIRX<span className="u-hollow-accent">.</span>
-        </span>
-        <span
-          data-s-fill
-          aria-hidden
-          className="absolute inset-0 block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight text-ink"
-        >
-          ANIRX<span className="text-accent-hi">.</span>
-        </span>
-      </div>
-      <p data-s-name className="mt-10 font-display text-base font-bold tracking-[0.28em] text-ink md:text-xl">
-        {identity.fullName}
-      </p>
-      <p data-s-statement className="mt-3 font-edit text-lg italic text-ink-dim md:text-xl">
-        {site.statement}
-      </p>
-    </section>
+    <>
+      <section
+        ref={ref}
+        aria-label="ANIRX"
+        className="relative flex min-h-[96svh] flex-col items-center justify-center overflow-hidden border-t border-line px-[var(--spacing-gutter)] py-20 text-center"
+      >
+        <div data-s-word className="relative select-none will-change-transform">
+          <span className="u-hollow block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight">
+            ANIRX<span className="u-hollow-accent">.</span>
+          </span>
+          <span
+            data-s-fill
+            aria-hidden
+            className="absolute inset-0 block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight text-ink"
+          >
+            ANIRX<span className="text-accent-hi">.</span>
+          </span>
+        </div>
+        <p data-s-name className="mt-10 font-display text-base font-bold tracking-[0.28em] text-ink md:text-xl">
+          {identity.fullName}
+        </p>
+        <p data-s-statement className="mt-3 font-edit text-lg italic text-ink-dim md:text-xl">
+          {site.statement}
+        </p>
+      </section>
+
+      {/* the small print — the last line after the closing title */}
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-[var(--spacing-gutter)] py-5">
+        <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">
+          © {new Date().getFullYear()} ANIRUDH SHARMA — ANIRX.IN
+        </p>
+        <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">TOO CURIOUS TO STAY IN ONE LANE.</p>
+      </footer>
+    </>
   );
 }

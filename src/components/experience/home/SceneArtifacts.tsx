@@ -55,6 +55,13 @@ export function SceneArtifacts() {
 
   return (
     <section ref={sectionRef} id="the-things-i-make" aria-label="The things I make" className="relative border-t border-line">
+      {/* chapter entrance */}
+      <div className="flex min-h-[60svh] flex-col items-start justify-center px-[var(--spacing-gutter)]">
+        <p className="font-mono text-[10px] tracking-[0.5em] text-ink-faint">THINGS I BUILD</p>
+        <p className="mt-5 max-w-[28ch] font-edit text-2xl italic leading-snug text-ink md:text-4xl">
+          Artifacts from the work.
+        </p>
+      </div>
       {artifacts.map((p, idx) => {
         const flip = idx % 2 === 1;
         return (

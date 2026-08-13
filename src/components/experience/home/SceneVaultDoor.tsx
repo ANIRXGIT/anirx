@@ -47,14 +47,13 @@ export function SceneVaultDoor() {
   }, [reduced]);
 
   return (
-    <>
-      <section ref={sectionRef} aria-label="The Vault" className="relative h-[235svh] border-t border-line">
+    <section ref={sectionRef} aria-label="The Vault" className="relative h-[235svh] border-t border-line">
         <div className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden px-[var(--spacing-gutter)] text-center">
           {/* the light going out */}
           <span data-v-dark aria-hidden className="absolute inset-0 bg-black opacity-0" />
 
           <p data-v-0 className="relative font-mono text-[11px] tracking-[0.5em] text-ink-faint">
-            PUBLIC WORLD
+            SURFACE — LEFT BEHIND
           </p>
           <p data-v-1 className="absolute font-mono text-[11px] tracking-[0.45em] text-[#c7566f]">
             ACCESS — RESTRICTED
@@ -87,14 +86,5 @@ export function SceneVaultDoor() {
           </div>
         </div>
       </section>
-
-      {/* the small print — after the door, never the brand moment */}
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-[var(--spacing-gutter)] py-5">
-        <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">
-          © {new Date().getFullYear()} ANIRUDH SHARMA — ANIRX.IN
-        </p>
-        <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">TOO CURIOUS TO STAY IN ONE LANE.</p>
-      </footer>
-    </>
   );
 }

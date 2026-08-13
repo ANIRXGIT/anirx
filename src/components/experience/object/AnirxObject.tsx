@@ -1,5 +1,5 @@
+import Image from "next/image";
 import { portrait } from "@/content/identity";
-import { MediaSlot } from "@/components/ui/MediaSlot";
 
 /**
  * THE PORTRAIT PANELS — the hero's layered composition.
@@ -53,12 +53,18 @@ export function AnirxObject({ className = "" }: { className?: string }) {
               {i !== PORTRAIT_PANEL && <span className="obj-panel-cut" aria-hidden="true" />}
               {i === PORTRAIT_PANEL && (
                 <span className="obj-portrait" data-obj-portrait>
-                  <MediaSlot
-                    asset={portrait}
-                    className="absolute inset-0 h-full w-full"
-                    sizes="(max-width: 768px) 62vw, 24vw"
-                    priority
-                  />
+                  {portrait.available ? (
+                    <Image
+                      src={portrait.src}
+                      alt={portrait.alt}
+                      fill
+                      sizes="(max-width: 768px) 62vw, 24vw"
+                      priority
+                      className="object-cover object-top"
+                    />
+                  ) : (
+                    <span className="derived absolute inset-0" />
+                  )}
                   <span className="obj-veil" data-obj-veil />
                 </span>
               )}

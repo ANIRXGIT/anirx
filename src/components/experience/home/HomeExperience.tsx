@@ -9,13 +9,13 @@ import { SceneVaultDoor } from "./SceneVaultDoor";
 import { SceneWorlds } from "./SceneWorlds";
 
 /**
- * The homepage — v6, structure lock.
- * 01 THE ARRIVAL (hero — approved composition, untouched)
- * 02 THE WORLD (one continuous environment across seven worlds)
- * 03 THE THINGS I MAKE (artifact chapters: ASTRA / HOSTELMART / ANIRX)
- * 04 MAKE SOMETHING (full-screen contact end-title)
- * 05 ANIRX (the giant signature)
- * 06 THE VAULT (the full-screen door) + the small print
+ * The homepage — v7, final build.
+ * 01 THE ARRIVAL     (hero — approved composition, untouched)
+ * 02 THE WORLD       (one continuous environment across seven worlds + what I do)
+ * 03 THINGS I BUILD  (artifact chapters: ASTRA / HOSTELMART / ANIRX)
+ * 04 MAKE SOMETHING  (full-screen scroll contact sequence)
+ * 05 THE VAULT       (full-screen door — the private world)
+ * 06 ANIRX           (the final signature — closing title of the film)
  */
 export function HomeExperience() {
   return (
@@ -27,8 +27,8 @@ export function HomeExperience() {
       <SceneWorlds />
       <SceneArtifacts />
       <SceneMake />
-      <SceneSignature />
       <SceneVaultDoor />
+      <SceneSignature />
     </>
   );
 }

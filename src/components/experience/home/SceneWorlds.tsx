@@ -232,6 +232,32 @@ export function SceneWorlds() {
         <p data-w-reveal className="mt-8 font-edit text-lg italic text-ink-dim md:text-xl">{disciplines[6].note}</p>
       </article>
 
+      {/* WHAT I DO — the quiet editorial list, after the world rooms */}
+      <article data-world="do" aria-label="What I do" className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-[var(--spacing-gutter)]">
+        <div className="world-env" aria-hidden />
+        <h3 className="sr-only">What I do</h3>
+        <div className="relative max-w-[860px]">
+          <p data-w-reveal className="mb-14 font-mono text-[10px] tracking-[0.5em] text-ink-faint">WHAT I DO</p>
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-x-20 md:gap-y-12">
+            {[
+              { label: "Video Editing", note: "Long-form, short-form, reels. 4+ years freelance." },
+              { label: "Filmmaking", note: "Direction, DP, storytelling — one continuous practice." },
+              { label: "Websites", note: "Fast, intentional, from brief to deployment." },
+              { label: "Apps", note: "Native and web. Ideas that ship." },
+              { label: "Creative Technology", note: "Where making films and writing code feel the same." },
+              { label: "AI & Automation", note: "Building tools, not just using them." },
+            ].map(({ label, note }) => (
+              <div key={label} data-w-reveal className="group">
+                <p className="font-display text-[clamp(1.6rem,4vw,3rem)] font-extrabold leading-tight tracking-tight text-ink transition-colors duration-300 group-hover:text-accent-hi">
+                  {label}
+                </p>
+                <p className="mt-2 font-edit text-base italic leading-snug text-ink-dim md:text-lg">{note}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </article>
+
       {/* chapter close */}
       <div data-w-statement className="flex min-h-[85svh] flex-col items-center justify-center px-[var(--spacing-gutter)] text-center">
         <span className="max-w-[18ch] font-edit text-3xl italic leading-snug text-ink md:text-5xl">

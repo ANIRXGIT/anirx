@@ -257,7 +257,7 @@ html[data-intro="playing"] .chrome-ui {
 }
 
 /* scene-level placement offsets */
-.obj-stage--hero { --obj-ox: 4vw; --obj-oy: -18svh; }
+.obj-stage--hero { --obj-ox: 18vw; --obj-oy: -24svh; --obj-w: clamp(130px, 40vw, 180px); }
 @media (min-width: 768px) {
   .obj-stage--hero { --obj-ox: 10.5vw; --obj-oy: -5svh; --obj-w: clamp(230px, 21vw, 400px); }
 }
@@ -413,6 +413,11 @@ html[data-mode="day"] .obj-portrait img { filter: contrast(1.04) saturate(1); }
 }
 [data-world="sport"] .world-env {
   background: radial-gradient(130% 70% at 85% 50%, color-mix(in srgb, var(--tone-ember) 15%, transparent), transparent 62%);
+}
+[data-world="do"] .world-env {
+  background:
+    radial-gradient(100% 70% at 12% 50%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
+    radial-gradient(80% 60% at 88% 80%, color-mix(in srgb, var(--tone-data) 10%, transparent), transparent 55%);
 }
 
 /* FILM — the shaft of light that keeps traveling the screen */

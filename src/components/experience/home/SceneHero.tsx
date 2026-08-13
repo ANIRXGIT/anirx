@@ -213,7 +213,7 @@ export function SceneHero() {
   }, [reduced]);
 
   return (
-    <section ref={sectionRef} aria-label="Anirudh Sharma" data-cine className="relative">
+    <section ref={sectionRef} aria-label="Anirudh Sharma" data-cine data-scene="hero" className="relative">
       <div className="relative h-svh overflow-hidden bg-canvas">
         {/* the background letterforms — ghost geometry, deep behind */}
         <span
@@ -233,14 +233,14 @@ export function SceneHero() {
 
         {/* THE NAME + META — the poster block, left */}
         <div className="absolute left-[var(--spacing-gutter)] top-[55%] z-0 -translate-y-1/2 md:top-1/2">
-          <h1 data-h-nameblock className="font-display text-left font-extrabold leading-[0.9] tracking-tight text-ink will-change-transform">
+          <h1 data-h-nameblock className="font-display text-left font-extrabold leading-[0.88] tracking-tight text-ink will-change-transform">
             <span className="block overflow-hidden">
-              <span data-h-name-1 className="block text-[clamp(3rem,12.5vw,6rem)] md:text-[clamp(3rem,10.5vw,11.5rem)]">
+              <span data-h-name-1 className="block text-[clamp(3.5rem,13vw,7.5rem)] md:text-[clamp(5rem,14vw,17rem)]">
                 {identity.firstName}
               </span>
             </span>
             <span className="block overflow-hidden">
-              <span data-h-name-2 className="ml-[0.4em] block text-[clamp(3rem,12.5vw,6rem)] md:text-[clamp(3rem,10.5vw,11.5rem)]">
+              <span data-h-name-2 className="block text-[clamp(3.5rem,13vw,7.5rem)] md:text-[clamp(5rem,14vw,17rem)]">
                 {identity.lastName}
               </span>
             </span>
@@ -277,8 +277,8 @@ export function SceneHero() {
         </div>
 
         {/* THE WORLDS — a quiet index along the bottom edge */}
-        <div data-h-lanes aria-hidden className="absolute inset-x-0 bottom-[6.5svh] z-20 hidden justify-center md:flex">
-          <p className="flex flex-wrap justify-center gap-x-7 gap-y-2 px-[var(--spacing-gutter)] font-mono text-[9px] tracking-[0.35em]">
+        <div data-h-lanes aria-hidden className="absolute inset-x-0 bottom-[6.5svh] z-20 flex justify-center">
+          <p className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 px-[var(--spacing-gutter)] font-mono text-[8px] tracking-[0.3em] md:gap-x-7 md:text-[9px] md:tracking-[0.35em]">
             {disciplines.map((d) => (
               <span key={d.id} data-h-lane className="text-ink-dim">
                 {d.label}
