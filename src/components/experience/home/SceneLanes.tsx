@@ -33,15 +33,16 @@ function LaneWorld({ id }: { id: string }) {
       );
     case "code":
       return (
-        <div className="absolute inset-0 flex flex-col justify-center bg-canvas-2 p-6 font-mono text-[11px] leading-7 text-ink-dim md:p-8">
-          <p className="text-ink-faint">{"// anirx.in — src/content/projects.ts"}</p>
-          <p>{"{"}</p>
-          <p>&nbsp;&nbsp;id: <span className="text-ink">&quot;{astra?.id}&quot;</span>,</p>
-          <p>&nbsp;&nbsp;title: <span className="text-ink">&quot;{astra?.title}&quot;</span>,</p>
-          <p>&nbsp;&nbsp;category: <span className="text-ink">&quot;{astra?.category}&quot;</span>,</p>
-          <p>&nbsp;&nbsp;year: <span className="text-ink">&quot;{astra?.year}&quot;</span>,</p>
-          <p>&nbsp;&nbsp;status: <span className="text-accent-hi">&quot;{astra?.status}&quot;</span>,</p>
-          <p>{"}"}</p>
+        <div className="absolute inset-0 flex flex-col justify-between bg-canvas-2 p-6 md:p-8">
+          <p className="font-mono text-[9px] tracking-[0.3em] text-ink-dim">
+            {astra?.category} — {astra?.status.toUpperCase()}
+          </p>
+          <div>
+            <p className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">{astra?.title}</p>
+            <p className="mt-2 font-mono text-[9px] tracking-[0.3em] text-ink-dim">
+              {astra?.subtitle.toUpperCase()} — {astra?.year}
+            </p>
+          </div>
         </div>
       );
     case "ai":
