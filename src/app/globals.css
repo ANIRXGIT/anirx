@@ -1,0 +1,322 @@
+@import "tailwindcss";
+
+/* ============================================================
+   ANIRX DESIGN TOKENS — v4
+   Cinematic = light, depth, camera, scale, color, motion, story.
+   Never grain-as-effect, never glitch, never fake system UI.
+   DAY  = STUDIO (warm editorial light)
+   NIGHT = AFTER HOURS (deep workstation light)
+   CINEMA = SCREEN (an interaction mode)
+   ============================================================ */
+
+@theme {
+  --color-maroon-950: #24060d;
+  --color-maroon-900: #43111d;
+  --color-maroon-800: #521023;
+  --color-maroon-700: #681c2d;
+  --color-maroon-600: #8b2940;
+  --color-maroon-500: #a92c4c;
+  --color-maroon-400: #c7566f;
+  --color-maroon-300: #e06b8a;
+
+  --color-ink-media: #f0ece5;
+
+  --ease-luxe: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.85, 0, 0.15, 1);
+
+  --spacing-gutter: clamp(1.25rem, 4vw, 4rem);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-canvas-2: var(--canvas-2);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hi: var(--accent-hi);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-display: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, monospace;
+  --font-edit: var(--font-instrument), Georgia, serif;
+}
+
+/* ---------- NIGHT — AFTER HOURS ---------- */
+:root,
+html[data-mode="night"] {
+  --canvas: #08090a;
+  --canvas-2: #111315;
+  --ink: #f0ece5;
+  --ink-dim: #a09a90;
+  --ink-faint: #54514b;
+  --line: rgb(240 236 229 / 0.12);
+  --accent: #8b2940;
+  --accent-hi: #c7566f;
+  --accent-soft: rgb(139 41 64 / 0.16);
+  --tone-accent: #c7566f;
+  --tone-tech: #69d5d8;
+  --tone-data: #517da7;
+  --tone-ember: #d87942;
+  --tone-gold: #e8b23c;
+  --lift: 0 24px 70px -32px rgb(0 0 0 / 0.8);
+  --atmosphere:
+    radial-gradient(90% 55% at 50% -10%, rgb(105 213 216 / 0.05), transparent 60%),
+    radial-gradient(70% 50% at 85% 110%, rgb(139 41 64 / 0.09), transparent 65%);
+  color-scheme: dark;
+}
+
+/* ---------- DAY — STUDIO ---------- */
+html[data-mode="day"] {
+  --canvas: #ede9e1;
+  --canvas-2: #e4ded1;
+  --ink: #111111;
+  --ink-dim: #57534b;
+  --ink-faint: #b8b1a6;
+  --line: rgb(17 17 17 / 0.18);
+  --accent: #681c2d;
+  --accent-hi: #681c2d;
+  --accent-soft: rgb(104 28 45 / 0.1);
+  --tone-accent: #681c2d;
+  --tone-tech: #244a68;
+  --tone-data: #3d6488;
+  --tone-ember: #d87942;
+  --tone-gold: #c98a1f;
+  --lift: 0 1px 0 rgb(17 17 17 / 0.05), 0 18px 44px -22px rgb(67 17 29 / 0.22);
+  --atmosphere:
+    radial-gradient(95% 60% at 50% -12%, rgb(216 121 66 / 0.12), transparent 60%),
+    linear-gradient(180deg, rgb(255 252 246 / 0.6), transparent 34%);
+  color-scheme: light;
+}
+
+/* ---------- CINEMA — SCREEN ---------- */
+html[data-mode="cinema"] {
+  --canvas: #000000;
+  --canvas-2: #070708;
+  --ink: #f0ece5;
+  --ink-dim: #8e8a80;
+  --ink-faint: #403e38;
+  --line: rgb(240 236 229 / 0.1);
+  --accent: #8b2940;
+  --accent-hi: #c7566f;
+  --accent-soft: rgb(139 41 64 / 0.2);
+  --tone-accent: #c7566f;
+  --tone-tech: #69d5d8;
+  --tone-data: #517da7;
+  --tone-ember: #d87942;
+  --tone-gold: #e8b23c;
+  --lift: 0 24px 70px -32px rgb(0 0 0 / 0.9);
+  --atmosphere: none;
+  color-scheme: dark;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+
+html {
+  background: var(--canvas);
+}
+
+body {
+  background: var(--canvas);
+  background-image: var(--atmosphere);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  transition: background-color 0.6s var(--ease-luxe), color 0.6s var(--ease-luxe);
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--color-ink-media);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-hi);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-faint);
+  border: 3px solid var(--canvas);
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================
+   ANIRX UTILITIES
+   ============================================================ */
+
+.u-hollow {
+  -webkit-text-stroke: 1.5px var(--ink);
+  color: transparent;
+}
+.u-hollow-accent {
+  -webkit-text-stroke: 1.5px var(--accent-hi);
+  color: transparent;
+}
+
+.u-vertical {
+  writing-mode: vertical-rl;
+}
+
+/* Media frame — mode-aware surface */
+.u-plate {
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--canvas-2);
+  box-shadow: var(--lift);
+  overflow: hidden;
+}
+
+/* Slow vertical drift — removed in the approved direction; kept CSS-free */
+
+/* ============================================================
+   DERIVED MEDIA — an empty studio, lit and waiting.
+   Physical light, real depth, no texture noise, no boxes.
+   ============================================================ */
+.derived {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(168deg, var(--canvas-2), var(--canvas));
+}
+.derived::before {
+  /* key light falling into the void */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(72% 46% at 58% 16%, rgb(240 236 229 / 0.09), transparent 62%),
+    radial-gradient(120% 42% at 50% 108%, var(--accent-soft) 0%, transparent 66%);
+}
+.derived::after {
+  /* the stage floor line */
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line) 30%, var(--line) 70%, transparent);
+  box-shadow: 0 16px 34px 10px var(--accent-soft);
+}
+
+/* ============================================================
+   HERO — slit state is JS-only; no-JS = fully open
+   ============================================================ */
+.hero-media.js-closed {
+  clip-path: inset(0 calc(100% - 6px) 0 0);
+}
+
+/* DAY material — print matte on media, never on the background */
+html[data-mode="day"] .u-plate {
+  border: 12px solid #f4f1e8;
+  outline: 1px solid var(--line);
+}
+
+/* DAY editorial device — double hairline at section tops */
+html[data-mode="day"] .rule-double {
+  box-shadow: 0 -6px 0 0 var(--canvas), 0 -7px 0 0 var(--line);
+}
+
+/* CINEMA — media dominant: the subject itself steps closer */
+[data-cine-scale] {
+  transition: transform 0.9s var(--ease-luxe);
+}
+html[data-mode="cinema"] [data-cine-scale] {
+  transform: scale(1.1);
+}
+
+/* ============================================================
+   THE 7 FRAMES — one object, one subject.
+   CSS defaults = resting at FRAME (no-JS state). JS starts there.
+   ============================================================ */
+.frame-object {
+  position: relative;
+  background: var(--canvas-2);
+  border: 1px solid var(--line);
+  box-shadow: var(--lift);
+  overflow: hidden;
+}
+.frame-slice {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+[data-frame-word] {
+  opacity: 0;
+  transform: translateY(100%);
+}
+[data-frame-word]:first-of-type {
+  opacity: 1;
+  transform: none;
+}
+[data-fsweep],
+[data-fgrade],
+[data-fwave],
+[data-fstory],
+[data-fseam],
+[data-fplayhead] {
+  opacity: 0;
+}
+
+/* ============================================================
+   CINEMA — SCREEN: contextual letterbox, vanished chrome,
+   metadata steps away, media dominant
+   ============================================================ */
+html[data-mode="cinema"] body::before,
+html[data-mode="cinema"] body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: clamp(20px, 6vh, 72px);
+  background: #000;
+  z-index: 90;
+  pointer-events: none;
+  transition: transform 0.9s var(--ease-snap);
+}
+html[data-mode="cinema"] body::before { top: 0; transform: translateY(-100%); }
+html[data-mode="cinema"] body::after { bottom: 0; transform: translateY(100%); }
+html[data-mode="cinema"][data-cine="active"] body::before,
+html[data-mode="cinema"][data-cine="active"] body::after {
+  transform: translateY(0);
+}
+
+html[data-mode="cinema"] .chrome-ui {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-luxe);
+}
+html[data-mode="cinema"] .chrome-ui:hover,
+html[data-mode="cinema"] .chrome-ui:focus-within {
+  opacity: 1;
+}
+
+/* metadata steps away during cinema */
+html[data-mode="cinema"] .ui-meta {
+  opacity: 0.25;
+}
+.ui-meta {
+  transition: opacity 0.6s var(--ease-luxe);
+}
