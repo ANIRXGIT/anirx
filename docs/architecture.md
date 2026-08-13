@@ -80,9 +80,16 @@ entry is THE VAULT. More will surface. No footnotes anywhere.
 
 **WHAT** — Four acts: hero → 7 frames → lanes → doors.
 **WHY** — The person lands within ~8 seconds; everything after deepens craft.
-**HOW** — `SceneHero` is a *timed* autoplay sequence (mark → iris opens →
-face clears → ANIRUDH SHARMA → role → statement), scroll-locked, skippable
-by any input, once per session; no-JS/reduced-motion render the final state.
+**HOW** — `SceneHero` is a *timed* opening sequence — ENTERING ANIRX:
+a dark room, one point of light, the wordmark; a slit of real footage
+grows point → full-height sliver → full-bleed (the visitor enters the
+frame; the shot travels workspace → face per ASSETS.md §01); the seven
+lanes drift along the bottom; main titles land on the media
+(ANIRUDH SHARMA → CREATIVE TECHNOLOGIST → the statement). Scroll-locked,
+skippable by any input, once per session; the video `hold`s on its final
+frame (the face) at rest; chrome steps outside via `html[data-intro]`;
+leaving the hero physically recedes the room (scale + light fall).
+No-JS/reduced-motion/seen-in-session render the open resting state.
 `SceneFrames` is ONE cinematic object: a viewfinder holding the portrait,
 scrubbed through FRAME → LIGHT → MOTION → CUT → COLOR → SOUND → STORY with
 real process metadata (PROCESS / TC timecode / FR counter). `SceneLanes`

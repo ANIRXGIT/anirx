@@ -223,10 +223,28 @@ body {
 }
 
 /* ============================================================
-   HERO — slit state is JS-only; no-JS = fully open
+   HERO — ENTERING ANIRX
+   The closed (point-of-light) state is JS-only; SSR / no-JS /
+   reduced motion render the fully open resting frame.
    ============================================================ */
 .hero-media.js-closed {
-  clip-path: inset(0 calc(100% - 6px) 0 0);
+  clip-path: inset(50% 50% 50% 50%);
+}
+
+/* While the opening sequence plays, the chrome steps outside the room. */
+.chrome-ui {
+  transition: opacity 0.6s var(--ease-luxe);
+}
+html[data-intro="playing"] .chrome-ui {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The scroll cue — a slow draw of light through the track, not a bounce. */
+@keyframes hero-cue {
+  0% { transform: translateY(-100%); }
+  55% { transform: translateY(300%); }
+  100% { transform: translateY(300%); }
 }
 
 /* DAY material — print matte on media, never on the background */

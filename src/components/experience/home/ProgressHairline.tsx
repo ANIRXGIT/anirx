@@ -27,7 +27,7 @@ export function ProgressHairline() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed left-3 top-1/2 z-30 hidden h-[34vh] -translate-y-1/2 md:block"
+      className="chrome-ui pointer-events-none fixed left-3 top-1/2 z-30 hidden h-[34vh] -translate-y-1/2 md:block"
     >
       <span className="block h-full w-px bg-line">
         <span
