@@ -23,7 +23,7 @@ export const identity = {
 /** 01 — the hero video. The face of the opening. */
 export const heroVideo: MediaAsset = {
   src: "/media/hero/hero-main.mp4",
-  available: false,
+  available: true,
   kind: "video",
   alt: "Anirudh at work — between screen, camera and code",
   spec: "HERO VIDEO — see ASSETS.md §01",
@@ -32,7 +32,7 @@ export const heroVideo: MediaAsset = {
 /** 02 — the main portrait. */
 export const portrait: MediaAsset = {
   src: "/media/identity/portrait.jpg",
-  available: false,
+  available: true,
   kind: "image",
   alt: "Portrait of Anirudh Sharma",
   spec: "MAIN PORTRAIT — see ASSETS.md §02",
