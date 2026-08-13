@@ -411,17 +411,63 @@ html[data-mode="day"] .obj-light-blade { opacity: 0.4; }
 html[data-mode="day"] .obj-portrait img { filter: contrast(1.04) saturate(1); }
 
 /* ============================================================
-   THE WORLDS — the reading list exists until the live object
-   takes over (JS + full motion only).
+   THE WORLD — environments, not cards. One room per world;
+   the change is in light, structure and motion, never in chrome.
    ============================================================ */
-.js-w [data-w-list] {
-  display: none;
+.world-env {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+[data-world="film"] .world-env {
+  background:
+    radial-gradient(130% 90% at 50% 108%, color-mix(in srgb, var(--tone-accent) 14%, transparent), transparent 62%),
+    radial-gradient(90% 60% at 50% -10%, color-mix(in srgb, var(--ink) 6%, transparent), transparent 55%);
+}
+[data-world="edit"] .world-env {
+  background: radial-gradient(110% 80% at 20% 50%, color-mix(in srgb, var(--tone-data) 14%, transparent), transparent 60%);
+}
+[data-world="code"] .world-env {
+  background: radial-gradient(100% 80% at 80% 20%, color-mix(in srgb, var(--tone-tech) 13%, transparent), transparent 58%);
+}
+[data-world="ai"] .world-env {
+  background:
+    radial-gradient(60% 50% at 50% 56%, color-mix(in srgb, var(--tone-tech) 12%, transparent), transparent 66%),
+    radial-gradient(90% 70% at 50% 120%, color-mix(in srgb, var(--tone-accent) 10%, transparent), transparent 60%);
+}
+[data-world="build"] .world-env {
+  background: radial-gradient(120% 90% at 50% 118%, color-mix(in srgb, var(--tone-gold) 15%, transparent), transparent 62%);
+}
+[data-world="create"] .world-env {
+  background:
+    radial-gradient(70% 60% at 30% 40%, color-mix(in srgb, var(--tone-accent) 17%, transparent), transparent 64%),
+    radial-gradient(70% 60% at 74% 62%, color-mix(in srgb, var(--tone-gold) 12%, transparent), transparent 62%);
+}
+[data-world="sport"] .world-env {
+  background: radial-gradient(130% 70% at 85% 50%, color-mix(in srgb, var(--tone-ember) 15%, transparent), transparent 62%);
+}
+
+/* FILM — the shaft of light that keeps traveling the screen */
+@keyframes world-streak {
+  from { transform: translateX(-22%); }
+  to { transform: translateX(22%); }
+}
+
+/* AI — letters thinking */
+@keyframes ai-breath {
+  from { transform: translateY(0.025em); opacity: 0.68; }
+  to { transform: translateY(-0.045em); opacity: 1; }
+}
+[data-world="ai"] [data-letter] {
+  display: inline-block;
+  animation: ai-breath 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--d, 0) * 0.35s);
 }
 
 /* ============================================================
    THE ARTIFACTS — title hollows that fill when approached.
    ============================================================ */
-.art-row { --art-tone: var(--accent-hi); }
+[data-art] { --art-tone: var(--accent-hi); }
 .art-title {
   color: transparent;
   -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ink) 82%, transparent);
@@ -429,8 +475,8 @@ html[data-mode="day"] .obj-portrait img { filter: contrast(1.04) saturate(1); }
     color 0.6s var(--ease-luxe),
     -webkit-text-stroke-color 0.6s var(--ease-luxe);
 }
-.art-row:hover .art-title,
-.art-row:focus-within .art-title {
+[data-art]:hover .art-title,
+[data-art]:focus-within .art-title {
   color: var(--art-tone);
   -webkit-text-stroke-color: transparent;
 }

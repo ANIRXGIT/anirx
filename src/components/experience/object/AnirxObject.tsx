@@ -36,52 +36,10 @@ export function poseToTransform(p: PlatePose): string {
 }
 
 /**
- * THE WORLDS — one body, seven minds.
- * The same seven plates continuously recompose as the visitor moves
- * through the worlds. Geometry authored per world; nothing numbered.
- */
-export const WORLD_IDS = ["film", "edit", "code", "ai", "build", "create", "sport"] as const;
-export type WorldId = (typeof WORLD_IDS)[number];
+ * The object belongs to the hero's identity moment — it does not tour
+ * the page. The worlds that follow are environments of light and type,
+ * not poses of this body. */
 
-export function worldPose(world: WorldId, i: number): PlatePose {
-  const c = i - CENTER;
-  switch (world) {
-    /* a curved screen of slivers — cinema as architecture */
-    case "film":
-      return { x: c * 48, y: 0, z: -Math.abs(c) * 10, ry: c * 6 };
-    /* the cascade — frames falling through an edit */
-    case "edit":
-      return { x: c * 62, y: c * 14, z: (CENTER - i) * 10, ry: 0 };
-    /* engineering — one precise vertical column */
-    case "code":
-      return { x: 0, y: c * 30, z: (CENTER - i) * 4, ry: 0 };
-    /* the helix — a slow agent turning in space */
-    case "ai": {
-      const a = c * 0.8;
-      return { x: Math.round(Math.sin(a) * 95), y: c * 28, z: Math.round(Math.cos(a) * 55) - 30, ry: c * 10 };
-    }
-    /* a shipped thing — dense, grounded, one solid slab */
-    case "build":
-      return { x: c * 4, y: 8, z: (CENTER - i) * 26, ry: 0 };
-    /* the hand opens — a fan of material */
-    case "create":
-      return { x: c * 34, y: -Math.abs(c) * 6, z: (CENTER - i) * 12, ry: c * 9 };
-    /* lean and kinetic — the body at speed */
-    case "sport":
-      return { x: c * 56, y: (i % 2 === 0 ? 12 : -12) + c * -4, z: (CENTER - i) * 14, ry: -8 };
-  }
-}
-
-/** How the room itself leans for each world. */
-export const WORLD_TILT: Record<WorldId, number> = {
-  film: -8,
-  edit: 8,
-  code: 0,
-  ai: 14,
-  build: -5,
-  create: 2,
-  sport: -16,
-};
 
 export function AnirxObject({ className = "" }: { className?: string }) {
   return (
