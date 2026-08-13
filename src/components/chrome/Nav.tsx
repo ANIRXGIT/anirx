@@ -99,6 +99,29 @@ export function Nav() {
       >
         <nav className="mt-24 flex flex-col px-[var(--spacing-gutter)]" aria-label="Primary">
           {navItems.map((item, i) => {
+            /* Destinations that do not exist yet render as an inert,
+             * intentional layer of the index — same numbering, same
+             * rhythm, no interaction, never a broken link. */
+            if (item.available === false) {
+              return (
+                <span
+                  key={item.label}
+                  aria-disabled="true"
+                  style={{ transitionDelay: open ? `${120 + i * 45}ms` : "0ms" }}
+                  className={`relative flex items-baseline gap-4 overflow-hidden border-b border-line py-3 transition-all duration-500 [transition-timing-function:var(--ease-luxe)] sm:gap-8 sm:py-4 ${
+                    open ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+                  }`}
+                >
+                  <span className="font-mono text-[10px] tracking-[0.25em] text-ink-faint">
+                    {item.index}
+                  </span>
+                  <span className="font-display text-2xl font-bold tracking-tight text-ink-faint sm:text-4xl md:text-5xl">
+                    {item.label}
+                  </span>
+                </span>
+              );
+            }
+
             const active = pathname === item.href;
             return (
               <Link
