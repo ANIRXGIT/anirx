@@ -88,7 +88,7 @@ export function SceneLanes() {
 
       <div className="grid gap-10 px-[var(--spacing-gutter)] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         {/* the remote */}
-        <ul className="border-t border-line">
+        <ul className="order-2 border-t border-line lg:order-1">
           {disciplines.map((d, i) => {
             const isActive = active === i;
             return (
@@ -129,7 +129,7 @@ export function SceneLanes() {
         </ul>
 
         {/* the room */}
-        <div className="sticky top-24 h-fit self-start lg:mt-[4.5rem]" aria-hidden>
+        <div className="order-1 h-fit self-start lg:sticky lg:top-24 lg:order-2 lg:mt-[4.5rem]" aria-hidden>
           <div className="relative aspect-[4/3] w-full overflow-hidden" style={{ boxShadow: "var(--lift)" }}>
             {disciplines.map((d, i) => (
               <div
