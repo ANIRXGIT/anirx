@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { candid, disciplines, heroVideo, portrait } from "@/content/identity";
 import { projects } from "@/content/projects";
 import { MediaSlot } from "@/components/ui/MediaSlot";
@@ -78,6 +78,20 @@ function LaneWorld({ id }: { id: string }) {
 
 export function SceneLanes() {
   const [active, setActive] = useState(0);
+  const paneRef = useRef<HTMLDivElement>(null);
+
+  /* the room tilts toward the hand — depth, not decoration */
+  const tilt = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = paneRef.current;
+    if (!el || !window.matchMedia("(pointer: fine)").matches) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `perspective(1100px) rotateX(${(-y * 3.5).toFixed(2)}deg) rotateY(${(x * 4.5).toFixed(2)}deg)`;
+  };
+  const rest = () => {
+    if (paneRef.current) paneRef.current.style.transform = "perspective(1100px) rotateX(0deg) rotateY(0deg)";
+  };
 
   return (
     <section aria-label="The world" className="rule-double relative border-t border-line py-20 md:py-28">
@@ -131,7 +145,13 @@ export function SceneLanes() {
 
         {/* the room */}
         <div className="order-1 h-fit self-start lg:sticky lg:top-24 lg:order-2 lg:mt-[4.5rem]" aria-hidden>
-          <div className="relative aspect-[4/3] w-full overflow-hidden" style={{ boxShadow: "var(--lift)" }}>
+          <div
+            ref={paneRef}
+            onMouseMove={tilt}
+            onMouseLeave={rest}
+            className="relative aspect-[4/3] w-full overflow-hidden transition-transform duration-500 will-change-transform [transition-timing-function:var(--ease-luxe)]"
+            style={{ boxShadow: "var(--lift)" }}
+          >
             {disciplines.map((d, i) => (
               <div
                 key={d.id}
@@ -139,6 +159,9 @@ export function SceneLanes() {
                 style={{ opacity: active === i ? 1 : 0, transform: active === i ? "scale(1)" : "scale(1.03)" }}
               >
                 <LaneWorld id={d.id} />
+                <span className="u-hollow pointer-events-none absolute inset-0 flex items-center justify-center text-center font-display text-[clamp(3rem,8vw,7rem)] font-extrabold tracking-tight opacity-[0.12]">
+                  {d.label}
+                </span>
               </div>
             ))}
           </div>

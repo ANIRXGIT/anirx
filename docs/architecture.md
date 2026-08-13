@@ -80,18 +80,19 @@ entry is THE VAULT. More will surface. No footnotes anywhere.
 
 **WHAT** — Four acts: hero → 7 frames → lanes → doors.
 **WHY** — The person lands within ~8 seconds; everything after deepens craft.
-**HOW** — `SceneHero` is a *timed* opening sequence — ENTERING ANIRX:
-a dark room, one point of light, the wordmark; a slit of real footage
-grows point → full-height sliver → full-bleed (the visitor enters the
-frame; the shot travels workspace → face per ASSETS.md §01); the seven
-lanes drift along the bottom; main titles land on the media
-(ANIRUDH SHARMA → CREATIVE TECHNOLOGIST → the statement). Scroll-locked,
-skippable by any input, once per session; the video `hold`s on its final
-frame (the face) at rest; chrome steps outside via `html[data-intro]`;
-leaving the hero physically recedes the room (scale + light fall).
-No-JS/reduced-motion/seen-in-session render the open resting state.
-`SceneFrames` is ONE cinematic object: a viewfinder holding the portrait,
-scrubbed through FRAME → LIGHT → MOTION → CUT → COLOR → SOUND → STORY with
-real process metadata (PROCESS / TC timecode / FR counter). `SceneLanes`
-pairs the index rows with a sticky preview pane per lane. The whole homepage
-runs on ≤ 3 personal assets (budget: `public/media/ASSETS.md`).
+**HOW** — The visual identity is THE OBJECT (`components/experience/object/
+AnirxObject.tsx`): seven plates standing in CSS-3D depth — a monolith with
+the portrait sealed inside, lit by two crossed shafts of light (the X
+signature). Pose functions (`closedPose/openPose/cutPose/tightPose`) are the
+single source of truth; scenes only transform between them. The resting
+monolith is pure CSS — SSR/no-JS render it fully. `SceneHero` is a timed
+opening: dark room (ANIRX.IN) → plates assemble from deep space → the
+shrine opens and the person is inside → main titles land; skippable by any
+input, once per session, chrome steps out via `html[data-intro]`; leaving
+the hero closes the shrine and hands the monolith to THE SEVEN.
+`SceneFrames` scroll-scrubs THAT SAME object through FRAME → LIGHT →
+MOTION → CUT → COLOR → SOUND → STORY (only the current state is named;
+reduced motion/no-JS read the whole score as a list). `SceneLanes` pairs
+the index rows with a sticky, pointer-tilting preview pane per lane — the
+hero video lives only there now (FILM), per ASSETS.md. The whole homepage
+still runs on ≤ 3 personal assets (budget: `public/media/ASSETS.md`).

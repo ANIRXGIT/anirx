@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { heroVideo, sevenFrames } from "@/content/identity";
+import { sevenFrames } from "@/content/identity";
 import { gsap } from "@/motion/gsap";
 import { useReducedMotion } from "@/motion/useReducedMotion";
-import { MediaSlot } from "@/components/ui/MediaSlot";
-
-const WAVE = Array.from({ length: 48 }, (_, i) => 16 + ((i * 37) % 43) + ((i % 3) * 6));
+import { AnirxObject, cutPose, tightPose } from "@/components/experience/object/AnirxObject";
 
 /**
- * ACT 02 — THE 7. One subject, one continuous transformation.
- * Discovered, not listed: one counter, one word, one image being
- * carried through FRAME → LIGHT → MOTION → CUT → COLOR → SOUND → STORY.
- * Every stage leaves something behind; nothing is a card.
+ * ACT 02 — THE SEVEN. One object, seven states, discovered by scroll.
+ * The monolith the hero closed is this very body: FRAME establishes the
+ * geometry, LIGHT travels across it, MOTION turns it, CUT separates it,
+ * COLOR turns the light, SOUND gives it rhythm, STORY resolves it.
+ * Only the current state is ever named. Reduced motion / no-JS read
+ * the whole score as a quiet list beneath the standing object.
  */
 export function SceneFrames() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -22,27 +22,40 @@ export function SceneFrames() {
     const section = sectionRef.current;
     if (!section || reduced) return;
 
+    section.classList.add("js-seven");
+
     const ctx = gsap.context(() => {
       const q = gsap.utils.selector(section);
-      const slices = q("[data-fslice]");
-      const inners = q(".frame-media-inner");
-      const words = q("[data-frame-word]");
-      const counter = section.querySelector<HTMLElement>("[data-fcount]");
+      const plates = q("[data-obj-plate]");
+      const tilt = q("[data-obj-tilt]");
+      const stage = section.querySelector<HTMLElement>("[data-obj-stage]");
+      const counter = section.querySelector<HTMLElement>("[data-sev-count]");
+      const words = q("[data-sev-word]");
+      const reads = q("[data-sev-read]");
+      const copies = q("[data-sev-copy]");
       let lastStop = 0;
 
-      gsap.set(slices, { xPercent: 0, yPercent: 0 });
-      gsap.set(q("[data-fsweep]"), { xPercent: -140, autoAlpha: 1 });
       gsap.set(words, { autoAlpha: 0, yPercent: 100 });
       gsap.set(words[0], { autoAlpha: 1, yPercent: 0 });
+      gsap.set(reads, { autoAlpha: 0 });
+      gsap.set(reads[0], { autoAlpha: 1 });
+      gsap.set(copies, { autoAlpha: 0 });
+      gsap.set(copies[0], { autoAlpha: 1 });
+      gsap.set(q("[data-sev-final]"), { autoAlpha: 0, y: 16 });
 
       const showStop = (to: number, from: number) => {
-        if (counter) counter.textContent = `0${to + 1} / 07`;
+        if (counter) counter.textContent = `${sevenFrames[to].index} / 07`;
         gsap.to(words[from], { autoAlpha: 0, yPercent: -110, duration: 0.18, ease: "power2.in", overwrite: "auto" });
         gsap.fromTo(
           words[to],
           { autoAlpha: 0, yPercent: 100 },
-          { autoAlpha: 1, yPercent: 0, duration: 0.3, ease: "power2.out", delay: 0.08, overwrite: "auto" },
+          { autoAlpha: 1, yPercent: 0, duration: 0.3, ease: "power2.out", delay: 0.06, overwrite: "auto" },
         );
+        gsap.to(reads[from], { autoAlpha: 0, duration: 0.15, overwrite: "auto" });
+        gsap.to(reads[to], { autoAlpha: 1, duration: 0.25, delay: 0.06, overwrite: "auto" });
+        gsap.to(copies[from], { autoAlpha: 0, duration: 0.18, overwrite: "auto" });
+        gsap.to(copies[to], { autoAlpha: 1, duration: 0.3, delay: 0.06, overwrite: "auto" });
+        stage?.classList.toggle("state-color", to === 4);
       };
 
       const tl = gsap.timeline({
@@ -50,7 +63,7 @@ export function SceneFrames() {
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: "+=160%",
+          end: "+=340%",
           scrub: 0.7,
           pin: true,
           anticipatePin: 1,
@@ -64,123 +77,132 @@ export function SceneFrames() {
         },
       });
 
-      /* FRAME — the composition lands */
-      tl.fromTo(q("[data-fobject]"), { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out" }, 0)
-        .fromTo(q("[data-fcorners]"), { autoAlpha: 0 }, { autoAlpha: 1, stagger: 0.05, duration: 0.25 }, 0.3);
+      /* 01 FRAME — geometry establishes: the stack aligns, the floor wakes */
+      tl.fromTo(plates, { x: (i) => (i - 3) * 9 }, { x: (i) => (i - 3) * 8, duration: 0.4, ease: "power2.out" }, 0.1)
+        .fromTo(q("[data-obj-floor]"), { opacity: 0.55 }, { opacity: 0.85, duration: 0.4, ease: "power1.out" }, 0.15);
 
-      /* LIGHT — a key sweeps in and stays */
-      tl.to(q("[data-fsweep]"), { xPercent: 140, duration: 0.9, ease: "power1.inOut" }, 0.85)
-        .to(inners, { filter: "brightness(1.3) contrast(1.06)", duration: 0.4 }, 0.9)
-        .to(inners, { filter: "brightness(1.08) contrast(1.03)", duration: 0.45 }, 1.35);
+      /* 02 LIGHT — one blade travels across the body, the edges answer */
+      tl.fromTo(q("[data-obj-blade-b]"), { x: () => -window.innerWidth * 0.36 }, { x: () => window.innerWidth * 0.36, duration: 0.95, ease: "power1.inOut" }, 0.92)
+        .fromTo(plates, { filter: "brightness(1)" }, { filter: "brightness(1.4)", duration: 0.22, stagger: 0.045 }, 1.0)
+        .to(plates, { filter: "brightness(1)", duration: 0.3, stagger: 0.045 }, 1.4);
 
-      /* MOTION — a slow push, a breath of focus */
-      tl.to(q("[data-fstage]"), { scale: 1.1, xPercent: -1.6, duration: 0.9, ease: "power1.inOut" }, 1.85)
-        .to(inners, { filter: "brightness(1.08) contrast(1.03) blur(0.5px)", duration: 0.35 }, 2.3)
-        .to(inners, { filter: "brightness(1.08) contrast(1.03) blur(0px)", duration: 0.3 }, 2.65)
-        .to(q("[data-fstage]"), { scale: 1, xPercent: 0, duration: 0.45, ease: "power2.inOut" }, 2.95);
+      /* 03 MOTION — the object turns its shoulders */
+      tl.fromTo(tilt, { rotationY: 0, rotationX: 0 }, { rotationY: 24, rotationX: 2, duration: 0.5, ease: "power2.inOut" }, 1.84)
+        .to(tilt, { rotationY: -10, rotationX: 0, duration: 0.45, ease: "power2.inOut" }, 2.34);
 
-      /* CUT — the halves separate like film, and hold */
-      tl.to(slices[0], { yPercent: -20, xPercent: -0.6, duration: 0.32, ease: "power3.inOut" }, 3.3)
-        .to(slices[1], { yPercent: 20, xPercent: 0.6, duration: 0.32, ease: "power3.inOut" }, 3.3)
-        .fromTo(
-          q("[data-fseam]"),
-          { autoAlpha: 0, scaleX: 0.2 },
-          { autoAlpha: 1, scaleX: 1, duration: 0.3, ease: "power2.out" },
-          3.4,
-        );
-      /* the separation is held (~0.4 units) until COLOR rejoins at 4.02 */
+      /* 04 CUT — the body physically separates along its seam */
+      tl.to(
+        plates,
+        { x: (i) => cutPose(i).x, z: (i) => cutPose(i).z, rotationY: (i) => cutPose(i).ry, duration: 0.42, ease: "power3.inOut" },
+        2.76,
+      );
 
-      /* COLOR — flat first, then the grade, and it stays */
-      tl.to(slices, { xPercent: 0, yPercent: 0, duration: 0.35, ease: "power3.inOut" }, 4.02)
-        .to(q("[data-fseam]"), { autoAlpha: 0, duration: 0.2 }, 4.05)
-        .to(inners, { filter: "grayscale(0.7) contrast(0.95) brightness(1.04)", duration: 0.3 }, 4.1)
-        .to(q("[data-fgrade]"), { autoAlpha: 0.5, duration: 0.4 }, 4.45)
-        .to(inners, { filter: "grayscale(0) contrast(1.14) saturate(1.18)", duration: 0.4 }, 4.55);
+      /* 05 COLOR — the light turns; the material answers (class-driven grade) */
+      tl.to(plates, { filter: "brightness(1.12)", duration: 0.4, ease: "power1.inOut" }, 3.6);
 
-      /* SOUND — the mix prints below the picture */
-      tl.to(q("[data-fstage]"), { yPercent: -8, duration: 0.35, ease: "power2.inOut" }, 5.0)
-        .to(q("[data-fwave]"), { autoAlpha: 1, duration: 0.15 }, 5.05)
-        .fromTo(
-          q("[data-fbar]"),
-          { scaleY: 0, transformOrigin: "center bottom" },
-          { scaleY: 1, stagger: 0.008, duration: 0.28, ease: "power2.out" },
-          5.08,
-        )
-        .fromTo(q("[data-fplayhead]"), { autoAlpha: 1, left: "0%" }, { left: "100%", duration: 0.5, ease: "power1.inOut" }, 5.1)
-        .to(q("[data-fplayhead]"), { autoAlpha: 0, duration: 0.15 }, 5.6);
+      /* 06 SOUND — rhythm through the body: three pulses down the stack */
+      tl.to(plates, { z: "+=12", duration: 0.14, stagger: 0.03, ease: "sine.inOut" }, 4.36)
+        .to(plates, { z: "-=12", duration: 0.14, stagger: 0.03, ease: "sine.inOut" }, 4.64)
+        .to(plates, { z: "+=8", duration: 0.12, stagger: 0.03, ease: "sine.inOut" }, 4.92)
+        .to(plates, { z: "-=8", duration: 0.12, stagger: 0.03, ease: "sine.inOut" }, 5.18)
+        .to(q("[data-obj-blade-b]"), { x: 0, duration: 0.5, ease: "power1.inOut" }, 4.36);
 
-      /* STORY — everything resolves */
-      tl.to(q("[data-fbar]"), { scaleY: 0.14, stagger: 0.004, duration: 0.22 }, 5.85)
-        .to(q("[data-fstage]"), { yPercent: 0, duration: 0.35, ease: "power2.inOut" }, 5.9)
-        .to(q("[data-fgrade]"), { autoAlpha: 0.22, duration: 0.4 }, 5.9)
-        .to(q("[data-fcorners]"), { borderColor: "var(--accent-hi)", duration: 0.4 }, 6.0)
-        .to(q("[data-fstory]"), { autoAlpha: 1, duration: 0.45 }, 6.15)
-        .to({}, { duration: 0.25 });
+      /* 07 STORY — everything resolves into the final composition */
+      tl.to(
+        plates,
+        { x: (i) => tightPose(i).x, z: (i) => tightPose(i).z, rotationY: (i) => tightPose(i).ry, duration: 0.5, ease: "power2.inOut" },
+        5.6,
+      )
+        .to(tilt, { rotationY: 0, rotationX: 0, duration: 0.5, ease: "power2.inOut" }, 5.6)
+        .to(plates, { filter: "brightness(1)", duration: 0.4 }, 5.7)
+        .to(q("[data-sev-final]"), { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" }, 6.0)
+        .to({}, { duration: 0.3 })
+        /* leaving the installation room — handoff into THE WORLD */
+        .to(q("[data-sev-stage]"), { autoAlpha: 0, scale: 0.94, duration: 0.35 }, 6.5);
     }, section);
 
-    return () => ctx.revert();
+    return () => {
+      section.classList.remove("js-seven");
+      ctx.revert();
+    };
   }, [reduced]);
-
-  const sliceClips = ["inset(0 0 50% 0)", "inset(50% 0 0 0)"];
 
   return (
     <section ref={sectionRef} aria-label="The 7 frames" data-cine className="relative">
-      <div className="relative flex h-svh flex-col justify-center overflow-hidden px-[var(--spacing-gutter)] md:flex-row md:items-center md:gap-[clamp(1.75rem,3vw,3rem)]">
-        {/* the rail — one counter, one word, discovered in order */}
-        <div className="relative z-20 mb-6 md:mb-0 md:shrink-0">
-          <p className="font-mono text-[11px] tracking-[0.45em] text-ink-dim">
-            <span data-fcount>01 / 07</span>
-          </p>
-          <div className="relative mt-4 h-[1.15em] overflow-hidden font-display text-[clamp(2rem,4vw,3.4rem)] font-extrabold leading-none tracking-tight">
-            {sevenFrames.map((f) => (
-              <span key={f.index} data-frame-word aria-hidden="true" className="absolute inset-x-0 top-0 text-ink">
-                {f.word}
+      <div data-sev-stage className="relative h-svh overflow-hidden">
+        <h2 className="sr-only">The 7 frames — FRAME, LIGHT, MOTION, CUT, COLOR, SOUND, STORY</h2>
+
+        {/* the object itself */}
+        <AnirxObject />
+
+        {/* the score's header — only the current state is named */}
+        <div className="absolute inset-x-0 top-[13svh] z-20 flex items-end justify-between px-[var(--spacing-gutter)] md:top-[15svh]">
+          <div>
+            <p className="font-mono text-[10px] tracking-[0.45em] text-ink-dim md:text-[11px]">
+              <span data-sev-count>01 / 07</span>
+            </p>
+            <div className="relative mt-3 h-[1.15em] overflow-hidden font-display text-[clamp(2.1rem,5vw,4.2rem)] font-extrabold leading-none tracking-tight">
+              {sevenFrames.map((f, i) => (
+                <span
+                  key={f.index}
+                  data-sev-word
+                  aria-hidden="true"
+                  className={`absolute inset-x-0 top-0 block text-ink ${i === 0 ? "opacity-100" : "opacity-0"}`}
+                >
+                  {f.word}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="relative hidden h-[1.2em] overflow-hidden font-mono text-[10px] tracking-[0.3em] text-ink-faint md:block">
+            {sevenFrames.map((f, i) => (
+              <span key={f.index} data-sev-read aria-hidden="true" className={`absolute right-0 top-0 ${i === 0 ? "opacity-100" : "opacity-0"}`}>
+                {f.readout}
               </span>
             ))}
           </div>
         </div>
 
-        {/* the object */}
-        <div
-          data-cine-scale={heroVideo.available ? true : undefined}
-          data-fobject
-          className="frame-object w-full md:min-w-0 md:max-w-[min(56vw,920px)] md:flex-1"
-        >
-          {["left-3 top-3 border-l border-t", "right-3 top-3 border-r border-t", "bottom-3 left-3 border-b border-l", "bottom-3 right-3 border-b border-r"].map(
-            (pos) => (
-              <span key={pos} data-fcorners aria-hidden className={`absolute z-20 h-3.5 w-3.5 border-ink-dim/80 ${pos}`} />
-            ),
-          )}
-
-          <div data-fstage className="relative aspect-[16/10] max-md:min-h-[52svh] will-change-transform">
-            {sliceClips.map((clip, i) => (
-              <div key={i} data-fslice className="frame-slice" style={{ clipPath: clip }}>
-                <div className="frame-media-inner absolute inset-0">
-                  <MediaSlot asset={heroVideo} className="absolute inset-0 h-full w-full" sizes="(max-width: 768px) 92vw, 56vw" />
-                </div>
-              </div>
+        {/* the authored line of the current state */}
+        <div className="absolute inset-x-0 bottom-[8svh] z-20 flex justify-center px-[var(--spacing-gutter)]">
+          <div className="relative h-[3.4em] w-full max-w-[52ch] overflow-hidden text-center">
+            {sevenFrames.map((f, i) => (
+              <p
+                key={f.index}
+                data-sev-copy
+                aria-hidden="true"
+                className={`absolute inset-x-0 top-0 font-edit text-base italic leading-snug text-ink-dim md:text-lg ${i === 0 ? "opacity-100" : "opacity-0"}`}
+              >
+                {f.copy}
+              </p>
             ))}
-            <div
-              data-fsweep
-              aria-hidden
-              className="pointer-events-none absolute inset-0 mix-blend-overlay"
-              style={{ background: "linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.9) 50%, transparent 70%)" }}
-            />
-            <div data-fgrade aria-hidden className="pointer-events-none absolute inset-0 bg-accent mix-blend-multiply" />
-            <div data-fseam aria-hidden className="absolute left-0 right-0 top-1/2 z-10 h-[4px] -translate-y-1/2 bg-accent-hi" />
-          </div>
-
-          {/* the printed mix */}
-          <div data-fwave aria-hidden className="absolute inset-x-5 bottom-4 z-10 flex h-10 items-end gap-[2px]">
-            {WAVE.map((h, i) => (
-              <span key={i} data-fbar className="w-[2px] bg-[var(--color-ink-media)]/70" style={{ height: `${h}%` }} />
-            ))}
-            <span data-fplayhead aria-hidden className="absolute bottom-0 top-0 w-px bg-accent-hi" />
           </div>
         </div>
 
-        {/* STORY — the reason, under the frame */}
-        <p data-fstory className="absolute bottom-[7svh] left-1/2 w-max max-w-[86vw] -translate-x-1/2 text-center font-edit text-lg italic leading-snug text-ink-dim md:text-xl">
+        {/* STORY — the reason, resolving under everything */}
+        <p
+          data-sev-final
+          aria-hidden="true"
+          className="absolute bottom-[16svh] left-1/2 z-20 w-max max-w-[86vw] -translate-x-1/2 text-center font-edit text-xl italic leading-snug text-ink opacity-0 md:text-2xl"
+        >
+          Every film is made of these seven.<br />
+          <span className="text-accent-hi">So is everything else I build.</span>
+        </p>
+      </div>
+
+      {/* the score, readable — until the live object takes over (JS + full motion) */}
+      <div data-sev-list className="border-t border-line px-[var(--spacing-gutter)] py-16 md:py-20">
+        <ul className="flex flex-col gap-6">
+          {sevenFrames.map((f) => (
+            <li key={f.index} className="flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-line pb-6">
+              <span className="font-mono text-[10px] tracking-[0.3em] text-accent-hi">{f.index}</span>
+              <span className="font-display text-2xl font-bold tracking-tight text-ink">{f.word}</span>
+              <span className="hidden font-mono text-[9px] tracking-[0.25em] text-ink-faint sm:inline">{f.readout}</span>
+              <span className="w-full font-edit text-base italic text-ink-dim sm:w-auto sm:flex-1 sm:text-right">{f.copy}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-12 font-edit text-xl italic leading-snug text-ink-dim">
           Every film is made of these seven. <span className="text-ink">So is everything else I build.</span>
         </p>
       </div>
