@@ -83,16 +83,20 @@ entry is THE VAULT. More will surface. No footnotes anywhere.
 **HOW** — The visual identity is THE OBJECT (`components/experience/object/
 AnirxObject.tsx`): seven plates standing in CSS-3D depth — a monolith with
 the portrait sealed inside, lit by two crossed shafts of light (the X
-signature). Pose functions (`closedPose/openPose/cutPose/tightPose`) are the
-single source of truth; scenes only transform between them. The resting
-monolith is pure CSS — SSR/no-JS render it fully. `SceneHero` is a timed
-opening: dark room (ANIRX.IN) → plates assemble from deep space → the
-shrine opens and the person is inside → main titles land; skippable by any
+signature). Pose functions (`closedPose/openPose`, `worldPose` + `WORLD_TILT`)
+are the single source of truth; scenes only transform between them, and the
+resting monolith is pure CSS — SSR/no-JS render it fully. `SceneHero` is a
+timed opening: dark room (ANIRX.IN) → plates assemble from deep space → the
+shrine opens and the person is inside → ANIRUDH SHARMA lands at poster scale
+(~10.5vw) with the monolith standing inside the letters; skippable by any
 input, once per session, chrome steps out via `html[data-intro]`; leaving
-the hero closes the shrine and hands the monolith to THE SEVEN.
-`SceneFrames` scroll-scrubs THAT SAME object through FRAME → LIGHT →
-MOTION → CUT → COLOR → SOUND → STORY (only the current state is named;
-reduced motion/no-JS read the whole score as a list). `SceneLanes` pairs
-the index rows with a sticky, pointer-tilting preview pane per lane — the
-hero video lives only there now (FILM), per ASSETS.md. The whole homepage
-still runs on ≤ 3 personal assets (budget: `public/media/ASSETS.md`).
+closes the shrine. `SceneWorlds` scroll-scrubs THE SAME object through the
+seven worlds (film/edit/code/ai/build/create/sport) — curved screen, cascade,
+column, helix, slab, fan, lean — its light following each world's token tone;
+one world is ever named, nothing is counted (the 7 stays silent);
+reduced/no-JS read the worlds as a list. `SceneArtifacts` renders ASTRA /
+HOSTELMART / ANIRX as typographic artifacts (only real repo data; `[ADD …]`
+fields never render). `SceneEnd` is the signature: ANIRX ~22vw filling on
+scroll, then the person, the statement, and the two doors (contact + THE
+VAULT). The old frames-counter/lanes-pane concepts were removed by decision
+(§the 7 recurs silently). ≤ 3 personal assets, budget: `public/media/ASSETS.md`.

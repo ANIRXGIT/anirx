@@ -224,14 +224,8 @@ body {
 
 /* ============================================================
    HERO — ENTERING ANIRX (v5)
-   The closed (point-of-light) state is JS-only; SSR / no-JS /
-   reduced motion render the fully open resting composition.
+   While the opening sequence plays, the chrome steps outside the room.
    ============================================================ */
-.hero-media.js-closed {
-  clip-path: inset(50% 50% 50% 50%);
-}
-
-/* While the opening sequence plays, the chrome steps outside the room. */
 .chrome-ui {
   transition: opacity 0.6s var(--ease-luxe);
 }
@@ -263,16 +257,15 @@ html[data-intro="playing"] .chrome-ui {
 }
 
 /* scene-level placement offsets */
-.obj-stage--hero { --obj-ox: 0px; }
+.obj-stage--hero { --obj-ox: 0px; --obj-oy: -15svh; }
 @media (min-width: 768px) {
-  .obj-stage--hero { --obj-ox: 11.5vw; }
-  .obj-stage--hero { --obj-w: clamp(200px, 23vw, 330px); }
+  .obj-stage--hero { --obj-ox: 0px; --obj-oy: -6svh; --obj-w: clamp(210px, 24vw, 350px); }
 }
 
 .obj-tilt {
   position: absolute;
   left: calc(50% + var(--obj-ox, 0px));
-  top: 50%;
+  top: calc(50% + var(--obj-oy, 0px));
   width: var(--obj-w);
   height: calc(var(--obj-w) * 4 / 3);
   transform: translate(-50%, -50%);
@@ -397,20 +390,13 @@ html[data-intro="playing"] .chrome-ui {
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--tone-tech) 10%, transparent) 38%,
-    color-mix(in srgb, var(--tone-tech) 17%, transparent) 50%,
-    color-mix(in srgb, var(--tone-tech) 10%, transparent) 62%,
+    color-mix(in srgb, var(--world-glow, var(--tone-tech)) 10%, transparent) 38%,
+    color-mix(in srgb, var(--world-glow, var(--tone-tech)) 17%, transparent) 50%,
+    color-mix(in srgb, var(--world-glow, var(--tone-tech)) 10%, transparent) 62%,
     transparent
   );
   opacity: 0.22;
 }
-
-/* 05 COLOR — the material answer: light turns, edges follow */
-.obj-stage.state-color .obj-plate {
-  border-color: color-mix(in srgb, var(--tone-tech) 42%, var(--line));
-}
-.obj-stage.state-color .obj-light-b { opacity: 0.45; }
-.obj-stage.state-color .obj-light-a { opacity: 0.75; }
 
 /* DAY — STUDIO: plates become paper, light gets warmer restraint */
 html[data-mode="day"] .obj-plate {
@@ -425,11 +411,34 @@ html[data-mode="day"] .obj-light-blade { opacity: 0.4; }
 html[data-mode="day"] .obj-portrait img { filter: contrast(1.04) saturate(1); }
 
 /* ============================================================
-   THE SEVEN — the reading list exists until the live object
+   THE WORLDS — the reading list exists until the live object
    takes over (JS + full motion only).
    ============================================================ */
-.js-seven [data-sev-list] {
+.js-w [data-w-list] {
   display: none;
+}
+
+/* ============================================================
+   THE ARTIFACTS — title hollows that fill when approached.
+   ============================================================ */
+.art-row { --art-tone: var(--accent-hi); }
+.art-title {
+  color: transparent;
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ink) 82%, transparent);
+  transition:
+    color 0.6s var(--ease-luxe),
+    -webkit-text-stroke-color 0.6s var(--ease-luxe);
+}
+.art-row:hover .art-title,
+.art-row:focus-within .art-title {
+  color: var(--art-tone);
+  -webkit-text-stroke-color: transparent;
+}
+@media (hover: none) {
+  .art-title {
+    color: var(--ink);
+    -webkit-text-stroke-color: transparent;
+  }
 }
 
 /* DAY material — print matte on media, never on the background */

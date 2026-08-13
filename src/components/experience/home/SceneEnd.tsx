@@ -1,15 +1,93 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { site, socials } from "@/content/site";
+import { gsap } from "@/motion/gsap";
+import { useReducedMotion } from "@/motion/useReducedMotion";
 
 /**
- * ACT 04 — THE CHOICE. Public world, or the door.
- * One quiet editorial page. Nothing drifts, nothing repeats.
+ * ACT 04 — END TITLES. The signature.
+ *
+ * ANIRX arrives hollow and fills as the visitor scrolls it into view —
+ * the end-title of the whole experience. Then the person under the name,
+ * then the statement, then the two doors. The Vault stays sealed.
+ * Reduced motion / no-JS read the filled signature immediately.
  */
-export function SceneEnter() {
+export function SceneEnd() {
+  const titleRef = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el || reduced) return;
+
+    const ctx = gsap.context(() => {
+      const q = gsap.utils.selector(el);
+
+      gsap.fromTo(
+        q("[data-end-word]"),
+        { autoAlpha: 0.25, scale: 0.94 },
+        {
+          autoAlpha: 1,
+          scale: 1,
+          ease: "none",
+          scrollTrigger: { trigger: el, start: "top 85%", end: "center 50%", scrub: 0.6 },
+        },
+      );
+      gsap.fromTo(
+        q("[data-end-fill]"),
+        { clipPath: "inset(100% 0% 0% 0%)" },
+        {
+          clipPath: "inset(0% 0% 0% 0%)",
+          ease: "none",
+          scrollTrigger: { trigger: el, start: "top 70%", end: "center 42%", scrub: 0.6 },
+        },
+      );
+      gsap.fromTo(
+        q("[data-end-name], [data-end-statement]"),
+        { autoAlpha: 0, y: 14 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "center 60%", end: "center 38%", scrub: 0.6 },
+        },
+      );
+    }, el);
+
+    return () => ctx.revert();
+  }, [reduced]);
+
   return (
-    <section aria-label="The choice" className="rule-double relative border-t border-line">
-      <div className="grid md:grid-cols-2">
-        {/* the maroon seam between the two doors */}
+    <section aria-label="End titles" className="rule-double relative border-t border-line">
+      {/* THE SIGNATURE */}
+      <div
+        ref={titleRef}
+        className="relative flex min-h-[88svh] flex-col items-center justify-center overflow-hidden px-[var(--spacing-gutter)] py-20 text-center"
+      >
+        <div data-end-word className="relative select-none will-change-transform">
+          <span className="u-hollow block font-display text-[clamp(5rem,22vw,22rem)] font-extrabold leading-[0.92] tracking-tight">
+            ANIRX<span className="u-hollow-accent">.</span>
+          </span>
+          <span
+            data-end-fill
+            aria-hidden="true"
+            className="absolute inset-0 block font-display text-[clamp(5rem,22vw,22rem)] font-extrabold leading-[0.92] tracking-tight text-ink"
+          >
+            ANIRX<span className="text-accent-hi">.</span>
+          </span>
+        </div>
+        <p data-end-name className="mt-10 font-display text-base font-bold tracking-[0.28em] text-ink md:text-xl">
+          {site.owner.toUpperCase()}
+        </p>
+        <p data-end-statement className="mt-3 font-edit text-lg italic text-ink-dim md:text-xl">
+          {site.statement}
+        </p>
+      </div>
+
+      {/* THE TWO DOORS */}
+      <div className="grid border-t border-line md:grid-cols-2">
         <span aria-hidden className="absolute left-1/2 top-0 hidden h-full w-px bg-accent/50 md:block" />
 
         <div id="make-something" className="flex flex-col gap-8 px-[var(--spacing-gutter)] py-20 md:py-24">
@@ -63,7 +141,7 @@ export function SceneEnter() {
         </div>
       </div>
 
-      {/* quiet signature */}
+      {/* quiet signature line */}
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-[var(--spacing-gutter)] py-5">
         <p className="font-mono text-[9px] tracking-[0.3em] text-ink-faint">
           © {new Date().getFullYear()} ANIRUDH SHARMA — ANIRX.IN
