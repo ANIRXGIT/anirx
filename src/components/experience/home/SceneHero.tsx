@@ -130,7 +130,7 @@ export function SceneHero() {
 
         {/* THE FACE — the subject. Left, standing on the shelf line. */}
         <div
-          data-cine-scale
+          data-cine-scale={heroVideo.available ? true : undefined}
           data-hero-media
           className="hero-media relative order-1 z-10 h-[46svh] w-full md:absolute md:bottom-[10svh] md:left-[7vw] md:h-[62svh] md:w-[min(46vw,660px)]"
         >
