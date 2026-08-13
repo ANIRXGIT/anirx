@@ -259,7 +259,7 @@ html[data-intro="playing"] .chrome-ui {
 /* scene-level placement offsets */
 .obj-stage--hero { --obj-ox: 0px; --obj-oy: -15svh; }
 @media (min-width: 768px) {
-  .obj-stage--hero { --obj-ox: 0px; --obj-oy: -6svh; --obj-w: clamp(210px, 24vw, 350px); }
+  .obj-stage--hero { --obj-ox: 14vw; --obj-oy: -6svh; --obj-w: clamp(210px, 23vw, 340px); }
 }
 
 .obj-tilt {

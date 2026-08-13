@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { identity } from "@/content/identity";
+import { disciplines, identity } from "@/content/identity";
 import { gsap, ScrollTrigger } from "@/motion/gsap";
 import { lenisStore } from "@/motion/lenisStore";
 import { useReducedMotion } from "@/motion/useReducedMotion";
@@ -70,7 +70,7 @@ export function SceneHero() {
           { scale: 1.14, yPercent: -4, autoAlpha: 0, ease: "none", duration: 0.7 },
           0,
         )
-        .to(q("[data-h-meta], [data-h-cue]"), { autoAlpha: 0, ease: "none", duration: 0.3 }, 0);
+        .to(q("[data-h-meta], [data-h-cue], [data-h-lanes]"), { autoAlpha: 0, ease: "none", duration: 0.3 }, 0);
 
       /* pointer parallax — the monolith acknowledges the hand */
       if (window.matchMedia("(pointer: fine)").matches) {
@@ -112,6 +112,7 @@ export function SceneHero() {
       gsap.set(q("[data-h-prelude]"), { autoAlpha: 1 });
       gsap.set(q("[data-h-wordmark]"), { autoAlpha: 0, letterSpacing: "0.9em" });
       gsap.set(q("[data-h-dot]"), { autoAlpha: 0, scale: 0.6 });
+      gsap.set(q("[data-h-lane]"), { autoAlpha: 0, y: 10 });
       gsap.set(q("[data-h-name-1], [data-h-name-2]"), { yPercent: 112 });
       gsap.set(q("[data-h-role], [data-h-statement], [data-h-cue]"), { autoAlpha: 0, y: 12 });
       gsap.set(q("[data-h-rule]"), { scaleX: 0, transformOrigin: "center center" });
@@ -162,6 +163,8 @@ export function SceneHero() {
           2.9,
         )
         .to(q("[data-obj-veil]"), { opacity: 0.1, duration: 1.5, ease: "power2.out" }, 3.15)
+        /* the worlds trace past */
+        .to(q("[data-h-lane]"), { autoAlpha: 1, y: 0, stagger: 0.09, duration: 0.5 }, 3.9)
         /* the name, at poster scale */
         .to(q("[data-h-name-1]"), { yPercent: 0, duration: 0.7 }, 4.5)
         .to(q("[data-h-name-2]"), { yPercent: 0, duration: 0.7 }, 4.85)
@@ -169,6 +172,7 @@ export function SceneHero() {
         .to(q("[data-h-rule]"), { scaleX: 1, duration: 0.6, ease: "power2.inOut" }, 5.6)
         .to(q("[data-h-statement]"), { autoAlpha: 1, y: 0, duration: 0.5 }, 5.95)
         .to(q("[data-h-cue]"), { autoAlpha: 1, y: 0, duration: 0.4 }, 6.4)
+        .to(q("[data-h-lane]"), { autoAlpha: 0.5, duration: 0.8 }, 6.4)
         .to({}, { duration: 0.5 });
 
       lockScroll();
@@ -265,6 +269,17 @@ export function SceneHero() {
           />
         </div>
 
+        {/* THE WORLDS — a quiet index along the bottom edge */}
+        <div data-h-lanes aria-hidden className="absolute inset-x-0 bottom-[3.2svh] z-20 hidden justify-center md:flex">
+          <p className="flex flex-wrap justify-center gap-x-7 gap-y-2 px-[var(--spacing-gutter)] font-mono text-[9px] tracking-[0.35em]">
+            {disciplines.map((d) => (
+              <span key={d.id} data-h-lane className="text-ink-dim">
+                {d.label}
+              </span>
+            ))}
+          </p>
+        </div>
+
         {/* META — role & statement, quiet beneath the name */}
         <div data-h-meta className="absolute inset-x-0 bottom-[8.5svh] z-20 flex flex-col items-center gap-3 px-[var(--spacing-gutter)] text-center">
           <p data-h-role className="flex items-center gap-4 font-mono text-[10px] tracking-[0.5em] text-ink-dim md:text-[11px]">
@@ -278,7 +293,7 @@ export function SceneHero() {
         </div>
 
         {/* CUE — appears only at rest */}
-        <div data-h-cue aria-hidden className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2">
+        <div data-h-cue aria-hidden className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2 md:hidden">
           <span className="font-mono text-[9px] tracking-[0.35em] text-ink-dim">SCROLL</span>
           <span className="h-6 w-px overflow-hidden bg-line">
             <span className="block h-2 w-px bg-accent-hi [animation:hero-cue_2.2s_var(--ease-luxe)_infinite]" />
