@@ -79,18 +79,19 @@ export function SceneFrames() {
         .to(inners, { filter: "brightness(1.08) contrast(1.03) blur(0px)", duration: 0.3 }, 2.65)
         .to(q("[data-fstage]"), { scale: 1, xPercent: 0, duration: 0.45, ease: "power2.inOut" }, 2.95);
 
-      /* CUT — the picture separates on a seam */
-      tl.to(slices[0], { yPercent: -7, xPercent: -1, duration: 0.3, ease: "power3.inOut" }, 3.45)
-        .to(slices[1], { yPercent: 7, xPercent: 1, duration: 0.3, ease: "power3.inOut" }, 3.45)
+      /* CUT — the halves separate like film, and hold */
+      tl.to(slices[0], { yPercent: -20, xPercent: -0.6, duration: 0.32, ease: "power3.inOut" }, 3.3)
+        .to(slices[1], { yPercent: 20, xPercent: 0.6, duration: 0.32, ease: "power3.inOut" }, 3.3)
         .fromTo(
           q("[data-fseam]"),
-          { autoAlpha: 0, scaleX: 0.5 },
-          { autoAlpha: 1, scaleX: 1, duration: 0.25, ease: "power2.out" },
-          3.55,
+          { autoAlpha: 0, scaleX: 0.2 },
+          { autoAlpha: 1, scaleX: 1, duration: 0.3, ease: "power2.out" },
+          3.4,
         );
+      /* the separation is held (~0.4 units) until COLOR rejoins at 4.02 */
 
       /* COLOR — flat first, then the grade, and it stays */
-      tl.to(slices, { xPercent: 0, yPercent: 0, duration: 0.35, ease: "power3.inOut" }, 4.0)
+      tl.to(slices, { xPercent: 0, yPercent: 0, duration: 0.35, ease: "power3.inOut" }, 4.02)
         .to(q("[data-fseam]"), { autoAlpha: 0, duration: 0.2 }, 4.05)
         .to(inners, { filter: "grayscale(0.7) contrast(0.95) brightness(1.04)", duration: 0.3 }, 4.1)
         .to(q("[data-fgrade]"), { autoAlpha: 0.5, duration: 0.4 }, 4.45)
@@ -124,9 +125,9 @@ export function SceneFrames() {
 
   return (
     <section ref={sectionRef} aria-label="The 7 frames" data-cine className="relative">
-      <div className="relative flex h-svh flex-col justify-center overflow-hidden px-[var(--spacing-gutter)]">
+      <div className="relative flex h-svh flex-col justify-center overflow-hidden px-[var(--spacing-gutter)] md:flex-row md:items-center md:gap-[clamp(1.75rem,3vw,3rem)]">
         {/* the rail — one counter, one word, discovered in order */}
-        <div className="ui-meta absolute left-[var(--spacing-gutter)] top-[9svh] z-20 md:top-1/2 md:-translate-y-1/2">
+        <div className="relative z-20 mb-6 md:mb-0 md:shrink-0">
           <p className="font-mono text-[11px] tracking-[0.45em] text-ink-dim">
             <span data-fcount>01 / 07</span>
           </p>
@@ -140,14 +141,18 @@ export function SceneFrames() {
         </div>
 
         {/* the object */}
-        <div data-cine-scale data-fobject className="frame-object w-full md:ml-[clamp(190px,25vw,380px)] md:w-[min(56vw,920px)]">
+        <div
+          data-cine-scale={heroVideo.available ? true : undefined}
+          data-fobject
+          className="frame-object w-full md:min-w-0 md:max-w-[min(56vw,920px)] md:flex-1"
+        >
           {["left-3 top-3 border-l border-t", "right-3 top-3 border-r border-t", "bottom-3 left-3 border-b border-l", "bottom-3 right-3 border-b border-r"].map(
             (pos) => (
               <span key={pos} data-fcorners aria-hidden className={`absolute z-20 h-3.5 w-3.5 border-ink-dim/80 ${pos}`} />
             ),
           )}
 
-          <div data-fstage className="relative aspect-[16/10] will-change-transform">
+          <div data-fstage className="relative aspect-[16/10] max-md:min-h-[52svh] will-change-transform">
             {sliceClips.map((clip, i) => (
               <div key={i} data-fslice className="frame-slice" style={{ clipPath: clip }}>
                 <div className="frame-media-inner absolute inset-0">
@@ -162,7 +167,7 @@ export function SceneFrames() {
               style={{ background: "linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.9) 50%, transparent 70%)" }}
             />
             <div data-fgrade aria-hidden className="pointer-events-none absolute inset-0 bg-accent mix-blend-multiply" />
-            <div data-fseam aria-hidden className="absolute left-0 right-0 top-1/2 z-10 h-px bg-accent-hi" />
+            <div data-fseam aria-hidden className="absolute left-0 right-0 top-1/2 z-10 h-[4px] -translate-y-1/2 bg-accent-hi" />
           </div>
 
           {/* the printed mix */}
