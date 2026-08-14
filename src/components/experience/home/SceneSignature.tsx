@@ -30,8 +30,8 @@ export function SceneSignature() {
       );
       gsap.fromTo(
         q("[data-s-fill]"),
-        { clipPath: "inset(100% 0% 0% 0%)" },
-        { clipPath: "inset(0% 0% 0% 0%)", ease: "none", scrollTrigger: { trigger: el, start: "top 62%", end: "center 40%", scrub: 0.6 } },
+        { yPercent: 100 },
+        { yPercent: 0, ease: "none", scrollTrigger: { trigger: el, start: "top 62%", end: "center 40%", scrub: 0.6 } },
       );
       gsap.fromTo(
         q("[data-s-name], [data-s-statement]"),
@@ -51,17 +51,30 @@ export function SceneSignature() {
         aria-label="ANIRX"
         className="relative flex min-h-[96svh] flex-col items-center justify-center overflow-hidden border-t border-line px-[var(--spacing-gutter)] py-20 text-center"
       >
+        {/*
+          Single overflow:hidden container — one ANIRX. exists in the DOM.
+          Starts hollow (u-hollow class). GSAP fades the whole word in via
+          autoAlpha on data-s-word. The "signing" effect comes from the
+          container reveal: the fill text slides up from translateY(100%)
+          inside an overflow:hidden clip container.
+          Zero chance of a second ANIRX. leaking into view.
+        */}
         <div data-s-word className="relative select-none will-change-transform">
+          {/* The hollow outline — always present, always readable (no-JS / reduced-motion) */}
           <span className="u-hollow block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight">
             ANIRX<span className="u-hollow-accent">.</span>
           </span>
-          <span
-            data-s-fill
-            aria-hidden
-            className="absolute inset-0 block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight text-ink"
-            style={{ clipPath: "inset(100% 0% 0% 0%)" }}
-          >
-            ANIRX<span className="text-accent-hi">.</span>
+          {/* The filled overlay — clipped by overflow:hidden on its wrapper.
+              Slides up from below on scroll. aria-hidden so screen readers
+              only see the hollow span above. */}
+          <span aria-hidden className="absolute inset-0 overflow-hidden">
+            <span
+              data-s-fill
+              className="block font-display text-[clamp(5.5rem,24vw,26rem)] font-extrabold leading-[0.92] tracking-tight text-ink"
+              style={{ transform: "translateY(100%)" }}
+            >
+              ANIRX<span className="text-accent-hi">.</span>
+            </span>
           </span>
         </div>
         <p data-s-name className="mt-10 font-display text-base font-bold tracking-[0.28em] text-ink md:text-xl">
