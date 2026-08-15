@@ -63,8 +63,9 @@ html[data-mode="night"] {
   --tone-gold: #e8b23c;
   --lift: 0 24px 70px -32px rgb(0 0 0 / 0.8);
   --atmosphere:
-    radial-gradient(90% 55% at 50% -10%, rgb(105 213 216 / 0.05), transparent 60%),
-    radial-gradient(70% 50% at 85% 110%, rgb(139 41 64 / 0.09), transparent 65%);
+    radial-gradient(70% 55% at 18% 8%, rgb(105 213 216 / 0.06), transparent 55%),
+    radial-gradient(80% 60% at 88% 105%, rgb(139 41 64 / 0.13), transparent 65%),
+    radial-gradient(50% 40% at 4% 95%, rgb(216 121 66 / 0.04), transparent 50%);
   color-scheme: dark;
 }
 
@@ -108,7 +109,7 @@ html[data-mode="cinema"] {
   --tone-ember: #d87942;
   --tone-gold: #e8b23c;
   --lift: 0 24px 70px -32px rgb(0 0 0 / 0.9);
-  --atmosphere: none;
+  --atmosphere: radial-gradient(ellipse 90% 80% at 50% 50%, transparent 55%, rgb(0 0 0 / 0.45) 100%);
   color-scheme: dark;
 }
 
