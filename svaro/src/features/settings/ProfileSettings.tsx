@@ -126,6 +126,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [hydrating, setHydrating] = useState(false);
   const [debugPayload, setDebugPayload] = useState<string | null>(null);
+  const [projectCount, setProjectCount] = useState<number>(0);
   
   const [progressState, setProgressState] = useState<{
     status: 'idle' | 'running' | 'verifying' | 'error' | 'success';
