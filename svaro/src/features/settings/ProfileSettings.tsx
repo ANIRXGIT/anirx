@@ -176,21 +176,31 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     loadStats();
   }, [user.id]);
 
-  const handleHydrate = async () => {
+  const handleHydrate = async (testMode: boolean = false) => {
     setHydrating(true);
     setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
     try {
       const { db } = await import('../../db/dexie');
       const { supabase } = await import('../../lib/supabase');
       
-      // Collect all records
+      // Collect records
       const allRecords: { table: string; record: any }[] = [];
-      for (const table of db.tables) {
-        if (['sync_queue', 'sync_cursors', 'local_media'].includes(table.name)) continue;
-        const records = await table.toArray();
-        for (const record of records) {
-          if (record.user_id === user.id) {
-            allRecords.push({ table: table.name, record });
+      
+      if (testMode) {
+        // TEST MODE: Only upload the ONE profile record
+        const profiles = await db.profiles.toArray();
+        const profile = profiles.find(p => p.user_id === user.id);
+        if (!profile) throw new Error("No profile record found in local IndexedDB to test.");
+        allRecords.push({ table: 'profiles', record: profile });
+      } else {
+        // FULL MODE
+        for (const table of db.tables) {
+          if (['sync_queue', 'sync_cursors', 'local_media'].includes(table.name)) continue;
+          const records = await table.toArray();
+          for (const record of records) {
+            if (record.user_id === user.id) {
+              allRecords.push({ table: table.name, record });
+            }
           }
         }
       }
@@ -203,11 +213,12 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
         setProgressState(s => ({ 
           ...s, 
           currentTable: batch[0].table, 
-          currentRecord: `Batch ${Math.floor(i/BATCH_SIZE) + 1} (${i} to ${i + batch.length})` 
+          currentRecord: testMode ? 'TEST MODE (1 Record)' : `Batch ${Math.floor(i/BATCH_SIZE) + 1} (${i} to ${i + batch.length})` 
         }));
 
         const payload = batch.map(b => ({
-          mutation_id: `hydrate_${Date.now()}_${b.record.id}`,
+          // RPC strictly requires mutation_id to be a valid UUID
+          mutation_id: crypto.randomUUID(), 
           entity_type: b.table,
           entity_id: b.record.id,
           operation: 'UPSERT',
@@ -258,8 +269,11 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
       }
 
       setProgressState(s => ({ ...s, status: 'success' }));
-      alert('Hydration and Verification Successful!');
-      onClose();
+      alert(testMode ? 'TEST UPLOAD SUCCESS! Profile verified in Supabase.' : 'Hydration and Verification Successful!');
+      
+      if (!testMode) {
+        onClose();
+      }
 
     } catch (e: any) {
       setProgressState(s => ({ ...s, status: 'error', errorDetails: e.message || String(e) }));
@@ -335,13 +349,20 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
           </p>
         )}
 
-        <div className="flex gap-4 mt-auto">
-          <button onClick={onClose} disabled={hydrating && progressState.status !== 'error'} className="flex-1 bg-transparent border-2 border-border py-4 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50">Cancel</button>
+        <div className="flex flex-col gap-2 mt-auto">
           {progressState.status !== 'success' && (
-            <button onClick={handleHydrate} disabled={hydrating || loading} className="flex-1 bg-accent border-2 border-accent text-white py-4 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
-              {hydrating ? (progressState.status === 'error' ? 'Retry' : 'Working...') : 'Start'}
-            </button>
+            <>
+              <button onClick={() => handleHydrate(true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+                1. Test Profile Record
+              </button>
+              <button onClick={() => handleHydrate(false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
+                2. Hydrate All Data
+              </button>
+            </>
           )}
+          <button onClick={onClose} disabled={hydrating && progressState.status !== 'error'} className="w-full bg-transparent border-2 border-border py-3 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50 mt-2">
+            {progressState.status === 'success' ? 'Close' : 'Cancel'}
+          </button>
         </div>
       </div>
     </div>
