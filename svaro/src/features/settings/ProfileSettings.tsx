@@ -125,6 +125,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
   const [stats, setStats] = useState<{ local: number, cloud: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [hydrating, setHydrating] = useState(false);
+  const [debugPayload, setDebugPayload] = useState<string | null>(null);
   
   const [progressState, setProgressState] = useState<{
     status: 'idle' | 'running' | 'verifying' | 'error' | 'success';
@@ -165,6 +166,9 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
           
         if (count) cloudCount = count;
 
+        let pCount = 0;
+        try { pCount = await db.projects.count(); } catch (e) {}
+        setProjectCount(pCount);
         setStats({ local: localCount, cloud: cloudCount });
         setProgressState(s => ({ ...s, queued: localCount }));
       } catch (e) {
@@ -253,7 +257,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
 
           // DEBUG PAUSE
           if (testMode || testModeFoods || testModeProjects || (i === 0 && Object.keys(tableGroups).indexOf(tableName) === 0)) {
-            const debugPayload = payload.map((p, idx) => {
+            const debugPayloadObj = payload.map((p, idx) => {
               const safePayload = { ...p.payload };
               if (safePayload.pin) safePayload.pin = '***HIDDEN***';
               return {
@@ -263,14 +267,21 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
                 original_local_id: batchRecords[idx].id,
                 user_id: p.payload.user_id,
                 operation: p.operation,
-                source: 'IndexedDB (db.projects)',
-                local_schema: 'Project',
+                source: testModeProjects ? 'IndexedDB (db.projects)' : `IndexedDB (db.${tableName})`,
+                local_schema: testModeProjects ? 'Project' : tableName,
                 payload: safePayload
               };
             });
-            const proceed = window.confirm(`DEBUG PREVIEW BEFORE RPC:\n\n${JSON.stringify(debugPayload, null, 2)}\n\nProceed with RPC call?`);
-            if (!proceed || testModeProjects) {
-              throw new Error(testModeProjects ? 'Projects debug payload captured successfully. RPC aborted.' : 'User aborted at debug preview.');
+            if (testModeProjects) {
+              setDebugPayload(JSON.stringify(debugPayloadObj, null, 2));
+              setProgressState(s => ({ ...s, status: 'error', errorDetails: 'Projects debug payload captured successfully. RPC aborted.' }));
+              setHydrating(false);
+              return;
+            } else {
+              const proceed = window.confirm(`DEBUG PREVIEW BEFORE RPC:\n\n${JSON.stringify(debugPayloadObj, null, 2)}\n\nProceed with RPC call?`);
+              if (!proceed) {
+                throw new Error('User aborted at debug preview.');
+              }
             }
           }
 
@@ -390,14 +401,25 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
                   {progressState.errorDetails}
                 </div>
               )}
+              {debugPayload && (
+                <div className="mt-2 pt-2 border-t border-accent/30 text-accent">
+                  <div className="font-bold mb-1">Diagnostic JSON Payload:</div>
+                  <textarea 
+                    readOnly 
+                    className="w-full bg-black/50 text-accent font-mono text-[10px] p-2 rounded border border-accent/20 h-48 focus:outline-none"
+                    value={debugPayload}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
         
         {progressState.status === 'idle' && (
-          <p className="text-xs text-text-muted mb-4 text-center font-bold">
-            This will directly push all {stats?.local || 0} local records to the cloud and report any errors immediately.
-          </p>
+          <div className="text-xs text-text-muted mb-4 text-center font-bold">
+            <p>This will directly push all {stats?.local || 0} local records to the cloud and report any errors immediately.</p>
+            <p className="mt-1 text-[10px] text-[var(--ink)]">Local projects remaining: {projectCount}</p>
+          </div>
         )}
 
         <div className="flex flex-col gap-2 mt-auto">
