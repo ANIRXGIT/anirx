@@ -8,6 +8,7 @@ import { localRepo } from '../../db/repositories/LocalRepository';
 export default function ProfileSettings() {
   const navigate = useNavigate();
   const userId = useAuthStore(state => state.user?.id);
+  const user = useAuthStore(state => state.user);
   const { profile, loadInitialData } = useAppStore();
 
   const [name, setName] = useState(profile?.name || '');
@@ -15,6 +16,8 @@ export default function ProfileSettings() {
   const [sex, setSex] = useState(profile?.sex || 'male');
   const [height, setHeight] = useState(profile?.heightCm?.toString() || '');
   const [weight, setWeight] = useState(profile?.weightKg?.toString() || '');
+
+  const [isHydrateModalOpen, setIsHydrateModalOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -41,7 +44,6 @@ export default function ProfileSettings() {
     
     await localRepo.saveProfile(updated);
     
-    // Also push the weight to the weight log for today so it's consistent
     const { getLocalYYYYMMDD } = await import('../../domain/calendar/dateUtils');
     const { createBaseEntity } = await import('../../domain/core/BaseEntity');
     const ds = getLocalYYYYMMDD(new Date());
@@ -103,24 +105,108 @@ export default function ProfileSettings() {
           <h3 className="text-sm font-bold text-accent mb-2">DEVELOPER / SYNC</h3>
           <p className="text-xs text-text-muted mb-4">If your cloud data is missing, click below to safely force upload all your local Vercel data to the cloud.</p>
           <button
-            onClick={async () => {
-              try {
-                const { SyncEngine } = await import('../../sync/SyncEngine');
-                const { useAuthStore } = await import('../../stores/useAuthStore');
-                const currentUser = useAuthStore.getState().user;
-                if (!currentUser) throw new Error('Not logged in');
-                await SyncEngine.forceUploadAllLocalData(currentUser.id);
-                alert('Force sync complete! Data uploaded.');
-              } catch (e: any) {
-                alert('Sync failed: ' + e.message);
-              }
-            }}
+            onClick={() => setIsHydrateModalOpen(true)}
             className="w-full py-3 bg-surface hover:bg-surface-elevated text-text font-bold rounded-lg transition-colors border border-accent/20"
           >
             FORCE HYDRATE TO CLOUD
           </button>
         </div>
 
+      </div>
+
+      {isHydrateModalOpen && user && (
+        <HydrateModal user={user} onClose={() => setIsHydrateModalOpen(false)} />
+      )}
+    </div>
+  );
+}
+
+function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
+  const [stats, setStats] = useState<{ local: number, cloud: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hydrating, setHydrating] = useState(false);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const { db } = await import('../../db/dexie');
+        const { supabase } = await import('../../lib/supabase');
+        
+        let localCount = 0;
+        for (const table of db.tables) {
+          if (['sync_queue', 'sync_cursors', 'local_media'].includes(table.name)) continue;
+          const records = await table.toArray();
+          localCount += records.filter(r => r.user_id === user.id).length;
+        }
+
+        let cloudCount = 0;
+        // Check profiles table as a proxy for cloud data existence
+        const { count } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+          
+        if (count) cloudCount = count;
+
+        setStats({ local: localCount, cloud: cloudCount });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, [user.id]);
+
+  const handleHydrate = async () => {
+    setHydrating(true);
+    try {
+      const { SyncEngine } = await import('../../sync/SyncEngine');
+      await SyncEngine.forceUploadAllLocalData(user.id);
+      alert('Force sync queued successfully. Data is uploading in the background.');
+      onClose();
+    } catch (e: any) {
+      alert('Hydration failed: ' + e.message);
+      setHydrating(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur flex items-center justify-center p-4">
+      <div className="bg-surface w-full max-w-sm rounded-3xl border border-border p-6 shadow-2xl">
+        <h2 className="font-black text-xl mb-4 text-center uppercase tracking-widest text-accent">Safe Migration</h2>
+        <div className="space-y-4 mb-6 text-sm">
+          <div className="bg-background p-4 rounded-xl border border-border">
+            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Authenticated Email</p>
+            <p className="font-bold break-all">{user.email}</p>
+          </div>
+          <div className="bg-background p-4 rounded-xl border border-border">
+            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Auth User ID</p>
+            <p className="font-mono text-xs text-text-muted break-all">{user.id}</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-background p-4 rounded-xl border border-border text-center">
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Local Records</p>
+              <p className="font-black text-xl">{loading ? '...' : stats?.local}</p>
+            </div>
+            <div className="bg-background p-4 rounded-xl border border-border text-center">
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Cloud Profiles</p>
+              <p className="font-black text-xl">{loading ? '...' : stats?.cloud}</p>
+            </div>
+          </div>
+        </div>
+        
+        <p className="text-xs text-text-muted mb-6 text-center font-bold">
+          This action will safely queue all {stats?.local || 0} local records for upload to this specific cloud account. It will not overwrite newer cloud data.
+        </p>
+
+        <div className="flex gap-4">
+          <button onClick={onClose} disabled={hydrating} className="flex-1 bg-transparent border-2 border-border py-4 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50">Cancel</button>
+          <button onClick={handleHydrate} disabled={hydrating || loading} className="flex-1 bg-accent border-2 border-accent text-white py-4 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
+            {hydrating ? 'Queuing...' : 'Confirm'}
+          </button>
+        </div>
       </div>
     </div>
   );
