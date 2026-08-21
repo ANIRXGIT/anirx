@@ -332,18 +332,48 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     }
   };
 
+  const handleAuditProjects = async () => {
+    try {
+      const { db } = await import('../../db/dexie');
+      const projects = await db.projects.toArray();
+      const project = projects.find(p => p.user_id === user.id);
+      
+      if (!project) {
+        setDebugPayload('NO PROJECT RECORD FOUND');
+        return;
+      }
+
+      const diagnosticData = {
+        TABLE: 'projects',
+        LOCAL_COUNT: projects.length,
+        RPC_CALLED: 'NO',
+        NETWORK_REQUEST_MADE: 'NO',
+        RECORD: {
+          entity_type: 'projects',
+          entity_id: project.id,
+          original_local_id: project.id,
+          user_id: project.user_id,
+          operation: 'UPSERT (Simulated)',
+          local_schema: 'Project',
+          payload: project
+        }
+      };
+
+      setDebugPayload(JSON.stringify(diagnosticData, null, 2));
+    } catch (e: any) {
+      setDebugPayload('ERROR EXTRACTING PROJECTS: ' + e.message);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (debugPayload) {
+      navigator.clipboard.writeText(debugPayload)
+        .then(() => alert('JSON Copied to clipboard!'))
+        .catch(() => alert('Failed to copy.'));
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur flex items-center justify-center p-4">
-      <div className="bg-surface w-full max-w-sm rounded-3xl border border-border p-6 shadow-2xl flex flex-col max-h-[90vh]">
-        <h2 className="font-black text-xl mb-4 text-center uppercase tracking-widest text-accent">Safe Migration</h2>
-        
-        <div className="overflow-y-auto space-y-4 mb-6 text-sm flex-1">
-          <div className="bg-background p-4 rounded-xl border border-border">
-            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Authenticated Email</p>
-            <p className="font-bold break-all">{user.email}</p>
-          </div>
-          <div className="bg-background p-4 rounded-xl border border-border">
-            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Auth User ID</p>
     <div className="fixed inset-0 bg-background/95 backdrop-blur-md z-50 flex flex-col p-6 animate-in fade-in duration-200">
       <div className="flex-1 w-full max-w-md mx-auto flex flex-col pt-12">
         <div className="text-center mb-8">
@@ -450,7 +480,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
               </button>
             </>
           )}
-                <button onClick={onClose} disabled={hydrating && progressState.status !== 'error'} className="w-full bg-transparent border-2 border-border py-3 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50 mt-2">
+          <button onClick={onClose} disabled={hydrating && progressState.status !== 'error'} className="w-full bg-transparent border-2 border-border py-3 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50 mt-2">
             {progressState.status === 'success' ? 'Close' : 'Cancel'}
           </button>
         </div>
