@@ -190,7 +190,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
   };
 
-  const handleHydrate = async (testMode: boolean = false, testModeFoods: boolean = false) => {
+  const handleHydrate = async (testMode: boolean = false, testModeFoods: boolean = false, testModeProjects: boolean = false) => {
     setHydrating(true);
     setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
     try {
@@ -199,7 +199,12 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
       
       const tableGroups: Record<string, any[]> = {};
       
-      if (testModeFoods) {
+      if (testModeProjects) {
+        const projects = await db.projects.toArray();
+        const project = projects.find(p => p.user_id === user.id);
+        if (!project) throw new Error("No projects record found in local IndexedDB to test.");
+        tableGroups['projects'] = [project];
+      } else if (testModeFoods) {
         const foods = await db.foods.toArray();
         const food = foods.find(f => f.user_id === user.id);
         if (!food) throw new Error("No foods record found in local IndexedDB to test.");
@@ -247,7 +252,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
           }));
 
           // DEBUG PAUSE
-          if (testMode || (i === 0 && Object.keys(tableGroups).indexOf(tableName) === 0)) {
+          if (testMode || testModeFoods || testModeProjects || (i === 0 && Object.keys(tableGroups).indexOf(tableName) === 0)) {
             const debugPayload = payload.map((p, idx) => {
               const safePayload = { ...p.payload };
               if (safePayload.pin) safePayload.pin = '***HIDDEN***';
@@ -258,12 +263,14 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
                 original_local_id: batchRecords[idx].id,
                 user_id: p.payload.user_id,
                 operation: p.operation,
+                source: 'IndexedDB (db.projects)',
+                local_schema: 'Project',
                 payload: safePayload
               };
             });
             const proceed = window.confirm(`DEBUG PREVIEW BEFORE RPC:\n\n${JSON.stringify(debugPayload, null, 2)}\n\nProceed with RPC call?`);
-            if (!proceed) {
-              throw new Error('User aborted at debug preview.');
+            if (!proceed || testModeProjects) {
+              throw new Error(testModeProjects ? 'Projects debug payload captured successfully. RPC aborted.' : 'User aborted at debug preview.');
             }
           }
 
@@ -396,14 +403,17 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
         <div className="flex flex-col gap-2 mt-auto">
           {progressState.status !== 'success' && (
             <>
-              <button onClick={() => handleHydrate(true, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={() => handleHydrate(true, false, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 1. Test Profile Record
               </button>
-              <button onClick={() => handleHydrate(false, true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={() => handleHydrate(false, true, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 2. Test Foods Record
               </button>
-              <button onClick={() => handleHydrate(false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
-                3. Hydrate All Data
+              <button onClick={() => handleHydrate(false, false, true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+                3. Audit Projects Record
+              </button>
+              <button onClick={() => handleHydrate(false, false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
+                4. Hydrate All Data
               </button>
             </>
           )}
