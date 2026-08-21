@@ -195,7 +195,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
   };
 
-  const handleHydrate = async (testMode: boolean = false, testModeFoods: boolean = false) => {
+  const handleHydrate = async (testMode: boolean = false, testModeFoods: boolean = false, testModeProjects: boolean = false) => {
     setHydrating(true);
     setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
     try {
@@ -204,7 +204,12 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
       
       const tableGroups: Record<string, any[]> = {};
       
-      if (testModeFoods) {
+      if (testModeProjects) {
+        const projects = await db.projects.toArray();
+        const project = projects.find(p => p.user_id === user.id);
+        if (!project) throw new Error("No projects record found to test.");
+        tableGroups['projects'] = [project];
+      } else if (testModeFoods) {
         const foods = await db.foods.toArray();
         const food = foods.find(f => f.user_id === user.id);
         if (!food) throw new Error("No foods record found in local IndexedDB to test.");
@@ -527,20 +532,23 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
         <div className="flex flex-col gap-2 mt-auto">
           {progressState.status !== 'success' && (
             <>
-              <button onClick={() => handleHydrate(true, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={() => handleHydrate(true, false, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 1. Test Profile Record
               </button>
-              <button onClick={() => handleHydrate(false, true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={() => handleHydrate(false, true, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 2. Test Foods Record
               </button>
               <button onClick={handleAuditProjects} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 3. Audit Projects Record
               </button>
-              <button onClick={handleFullDiagnostic} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
-                4. Full Schema Diagnostic
+              <button onClick={() => handleHydrate(false, false, true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+                4. Push Projects (Test)
               </button>
-              <button onClick={() => handleHydrate(false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
-                5. Hydrate All Data
+              <button onClick={handleFullDiagnostic} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+                5. Full Schema Diagnostic
+              </button>
+              <button onClick={() => handleHydrate(false, false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
+                6. Hydrate All Data
               </button>
             </>
           )}
