@@ -190,7 +190,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
   };
 
-  const handleHydrate = async (testMode: boolean = false) => {
+  const handleHydrate = async (testMode: boolean = false, testModeFoods: boolean = false) => {
     setHydrating(true);
     setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
     try {
@@ -199,7 +199,12 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
       
       const tableGroups: Record<string, any[]> = {};
       
-      if (testMode) {
+      if (testModeFoods) {
+        const foods = await db.foods.toArray();
+        const food = foods.find(f => f.user_id === user.id);
+        if (!food) throw new Error("No foods record found in local IndexedDB to test.");
+        tableGroups['foods'] = [food];
+      } else if (testMode) {
         // TEST MODE: Only upload the ONE profile record
         const profiles = await db.profiles.toArray();
         const profile = profiles.find(p => p.user_id === user.id);
@@ -391,15 +396,18 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
         <div className="flex flex-col gap-2 mt-auto">
           {progressState.status !== 'success' && (
             <>
-              <button onClick={() => handleHydrate(true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={() => handleHydrate(true, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 1. Test Profile Record
               </button>
-              <button onClick={() => handleHydrate(false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
-                2. Hydrate All Data
+              <button onClick={() => handleHydrate(false, true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+                2. Test Foods Record
+              </button>
+              <button onClick={() => handleHydrate(false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
+                3. Hydrate All Data
               </button>
             </>
           )}
-          <button onClick={onClose} disabled={hydrating && progressState.status !== 'error'} className="w-full bg-transparent border-2 border-border py-3 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50 mt-2">
+                <button onClick={onClose} disabled={hydrating && progressState.status !== 'error'} className="w-full bg-transparent border-2 border-border py-3 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50 mt-2">
             {progressState.status === 'success' ? 'Close' : 'Cancel'}
           </button>
         </div>
