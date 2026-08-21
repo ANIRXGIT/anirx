@@ -3,7 +3,24 @@ import { SyncPull } from './SyncPull';
 import { MediaSync } from './MediaSync';
 
 export class SyncEngine {
-  private static isSyncing = false;
+  static async forceUploadAllLocalData(userId: string): Promise<void> {
+    if (!userId) return;
+    const { mutationTracker } = await import('./MutationTracker');
+    const { db } = await import('../db/dexie');
+    
+    // Add every entity from every table to the sync queue to force a complete cloud hydration
+    for (const table of db.tables) {
+      if (['sync_queue', 'sync_cursors', 'local_media'].includes(table.name)) continue;
+      const records = await table.toArray();
+      for (const record of records) {
+        if (record.user_id !== userId) continue;
+        await mutationTracker.trackMutation('ENTITY_MUTATION', table.name, record.id, 'UPSERT', record, userId);
+      }
+    }
+    await this.runSyncCycle();
+  }
+
+  static isSyncing = false;
   private static currentUserId: string | null = null;
   private static syncInterval: any = null;
 

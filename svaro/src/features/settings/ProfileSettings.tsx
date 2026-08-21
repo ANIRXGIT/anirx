@@ -98,6 +98,29 @@ export default function ProfileSettings() {
         <button onClick={handleSave} className="w-full bg-accent text-white py-5 rounded-2xl font-black text-sm tracking-widest uppercase active:scale-[0.98] transition-transform">
           Save Profile
         </button>
+        
+        <div className="pt-4 mt-6 border-t border-surface">
+          <h3 className="text-sm font-bold text-accent mb-2">DEVELOPER / SYNC</h3>
+          <p className="text-xs text-text-muted mb-4">If your cloud data is missing, click below to safely force upload all your local Vercel data to the cloud.</p>
+          <button
+            onClick={async () => {
+              try {
+                const { SyncEngine } = await import('../../sync/SyncEngine');
+                const { useAuthStore } = await import('../../stores/useAuthStore');
+                const currentUser = useAuthStore.getState().user;
+                if (!currentUser) throw new Error('Not logged in');
+                await SyncEngine.forceUploadAllLocalData(currentUser.id);
+                alert('Force sync complete! Data uploaded.');
+              } catch (e: any) {
+                alert('Sync failed: ' + e.message);
+              }
+            }}
+            className="w-full py-3 bg-surface hover:bg-surface-elevated text-text font-bold rounded-lg transition-colors border border-accent/20"
+          >
+            FORCE HYDRATE TO CLOUD
+          </button>
+        </div>
+
       </div>
     </div>
   );

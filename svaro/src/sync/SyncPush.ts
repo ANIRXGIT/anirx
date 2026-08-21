@@ -89,8 +89,7 @@ export class SyncPush {
           await mutationTracker.markSuccess(item, userId); // markSuccess removes it from queue
         } else if (result.status === 'ERROR') {
           // RLS or schema error. Do not loop endlessly.
-          // Wait, if RLS fails, should we discard? Yes, else it blocks the queue forever.
-          console.error(`Mutation ${item.mutation_id} rejected by server:`, result.error);
+          console.error(`SYNC FAILED\ntable: ${item.entity_type}\noperation: upsert\ncode: ${result.error?.code || 'UNKNOWN'}\nmessage: ${result.error?.message || JSON.stringify(result.error)}\nuser_id: ${userId}\ntimestamp: ${new Date().toISOString()}`);
           await mutationTracker.markSuccess(item, userId); 
         } else {
           // Unknown status

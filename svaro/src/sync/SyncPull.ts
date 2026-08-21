@@ -29,7 +29,10 @@ export class SyncPull {
         .order('change_sequence', { ascending: true })
         .limit(limit);
 
-      if (error) break;
+      if (error) {
+        console.error(`SYNC FAILED\ntable: ${tableName}\noperation: select\ncode: ${error.code || 'UNKNOWN'}\nmessage: ${error.message || JSON.stringify(error)}\nuser_id: ${userId}\ntimestamp: ${new Date().toISOString()}`);
+        break;
+      }
       if (!data || data.length === 0) break;
 
       hasChanges = true;
