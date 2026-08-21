@@ -201,17 +201,17 @@ export default function Dashboard() {
               <p className="text-xs text-text-muted px-2 italic font-bold">No tasks assigned today.</p>
             ) : (
               tasks.map(t => (
-                <div key={t.id} className={`p-4 rounded-2xl border flex items-center justify-between transition-colors ${t.state === 'DONE' ? 'bg-accent/10 border-accent/20' : t.state === 'SKIPPED' ? 'bg-surface/50 border-border/50' : 'bg-surface border-border'}`}>
+                <div key={t.id} className={`p-4 rounded-2xl border flex items-center justify-between transition-colors ${t.state === 'DONE' ? 'bg-green-500/10 border-green-500/20' : t.state === 'SKIPPED' ? 'bg-red-500/10 border-red-500/20' : 'bg-surface border-border'}`}>
                   <div>
-                    <p className={`font-black uppercase text-sm ${t.state === 'DONE' ? 'text-accent' : t.state === 'SKIPPED' ? 'text-text-muted line-through' : 'text-text'}`}>{t.title}</p>
+                    <p className={`font-black uppercase text-sm ${t.state === 'DONE' ? 'text-green-500' : t.state === 'SKIPPED' ? 'text-red-500 line-through' : 'text-text'}`}>{t.title}</p>
                     <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{t.timeStr} • {t.durationMinutes}m</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button onClick={() => setTaskToDelete(t.id)} className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-red-500 transition-colors">
                       <Trash2 size={14} />
                     </button>
-                    <button onClick={() => setTaskStatus(t.id, t.state === 'SKIPPED' ? 'NOT DONE' : 'SKIPPED')} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${t.state === 'SKIPPED' ? 'border-text-muted text-text-muted bg-border' : 'border-border text-text-muted'}`}>✕</button>
-                    <button onClick={() => setTaskStatus(t.id, t.state === 'DONE' ? 'NOT DONE' : 'DONE')} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${t.state === 'DONE' ? 'border-accent text-accent bg-accent/20' : 'border-border text-text-muted'}`}>✓</button>
+                    <button onClick={() => setTaskStatus(t.id, t.state === 'SKIPPED' ? 'NOT DONE' : 'SKIPPED')} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${t.state === 'SKIPPED' ? 'border-red-500 text-red-500 bg-red-500/20' : 'border-border text-text-muted'}`}>✕</button>
+                    <button onClick={() => setTaskStatus(t.id, t.state === 'DONE' ? 'NOT DONE' : 'DONE')} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${t.state === 'DONE' ? 'border-green-500 text-green-500 bg-green-500/20' : 'border-border text-text-muted'}`}>✓</button>
                   </div>
                 </div>
               ))

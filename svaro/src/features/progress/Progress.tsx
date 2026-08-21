@@ -98,6 +98,7 @@ export default function Progress() {
     for (let d = new Date(cutoffDate); d.getTime() <= now; d.setDate(d.getDate() + 1)) {
       matrixDates.push(getLocalYYYYMMDD(d));
     }
+    matrixDates.reverse(); // Show latest date first
 
     const defs = await localRepo.getTaskDefinitions(userId);
     const tasksRecord: Record<string, any[]> = {};
@@ -164,14 +165,14 @@ export default function Progress() {
                         <div 
                           key={idx} 
                           title={`${taskMatrix.dates[idx]} - ${s}`}
-                          className={`w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[10px] font-black transition-colors ${
-                            s === 'DONE' ? 'bg-accent text-white' : 
-                            s === 'SKIPPED' ? 'bg-border text-text-muted' : 
-                            s === null ? 'bg-transparent text-transparent' : 
-                            'bg-background border border-border text-text-muted/50'
-                          }`}
-                        >
-                          {s === 'DONE' ? '✓' : s === 'SKIPPED' ? '✕' : ''}
+                            className={`w-6 h-6 shrink-0 rounded-md flex items-center justify-center text-[10px] font-black transition-colors ${
+                              s === 'DONE' ? 'bg-green-500 text-white' : 
+                              s === 'SKIPPED' ? 'bg-red-500 text-white' : 
+                              s === null ? 'bg-transparent text-transparent' : 
+                              'bg-background border border-border text-text-muted/50'
+                            }`}
+                          >
+                            {s === 'DONE' ? '✓' : s === 'SKIPPED' ? '✕' : ''}
                         </div>
                       ))}
                   </div>
@@ -238,7 +239,7 @@ export default function Progress() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sleepData}>
                   <XAxis dataKey="date" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis domain={[0, 'auto']} ticks={[0, 2, 4, 6, 8, 10]} tickFormatter={v => `${v}h`} fontSize={10} tickLine={false} axisLine={false} width={30} />
+                  <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tickFormatter={v => `${v}h`} fontSize={10} tickLine={false} axisLine={false} width={30} />
                   <Tooltip contentStyle={{ backgroundColor: '#1C1C1E', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' }} cursor={{ fill: '#2C2C2E' }} />
                   <Bar dataKey="hours" fill="#0A84FF" radius={[4, 4, 0, 0]} />
                 </BarChart>
