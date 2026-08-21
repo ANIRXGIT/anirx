@@ -195,7 +195,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
   };
 
-  const handleHydrate = async (testMode: boolean = false, testModeFoods: boolean = false, testModeProjects: boolean = false) => {
+  const handleHydrate = async (testMode: boolean = false, testModeFoods: boolean = false) => {
     setHydrating(true);
     setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
     try {
@@ -204,12 +204,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
       
       const tableGroups: Record<string, any[]> = {};
       
-      if (testModeProjects) {
-        const projects = await db.projects.toArray();
-        const project = projects.find(p => p.user_id === user.id);
-        if (!project) throw new Error("No projects record found in local IndexedDB to test.");
-        tableGroups['projects'] = [project];
-      } else if (testModeFoods) {
+      if (testModeFoods) {
         const foods = await db.foods.toArray();
         const food = foods.find(f => f.user_id === user.id);
         if (!food) throw new Error("No foods record found in local IndexedDB to test.");
@@ -257,7 +252,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
           }));
 
           // DEBUG PAUSE
-          if (testMode || testModeFoods || testModeProjects || (i === 0 && Object.keys(tableGroups).indexOf(tableName) === 0)) {
+          if (testMode || testModeFoods || (i === 0 && Object.keys(tableGroups).indexOf(tableName) === 0)) {
             const debugPayloadObj = payload.map((p, idx) => {
               const safePayload = { ...p.payload };
               if (safePayload.pin) safePayload.pin = '***HIDDEN***';
@@ -268,21 +263,14 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
                 original_local_id: batchRecords[idx].id,
                 user_id: p.payload.user_id,
                 operation: p.operation,
-                source: testModeProjects ? 'IndexedDB (db.projects)' : `IndexedDB (db.${tableName})`,
-                local_schema: testModeProjects ? 'Project' : tableName,
+                source: `IndexedDB (db.${tableName})`,
+                local_schema: tableName,
                 payload: safePayload
               };
             });
-            if (testModeProjects) {
-              setDebugPayload(JSON.stringify(debugPayloadObj, null, 2));
-              setProgressState(s => ({ ...s, status: 'error', errorDetails: 'Projects debug payload captured successfully. RPC aborted.' }));
-              setHydrating(false);
-              return;
-            } else {
-              const proceed = window.confirm(`DEBUG PREVIEW BEFORE RPC:\n\n${JSON.stringify(debugPayloadObj, null, 2)}\n\nProceed with RPC call?`);
-              if (!proceed) {
-                throw new Error('User aborted at debug preview.');
-              }
+            const proceed = window.confirm(`DEBUG PREVIEW BEFORE RPC:\n\n${JSON.stringify(debugPayloadObj, null, 2)}\n\nProceed with RPC call?`);
+            if (!proceed) {
+              throw new Error('User aborted at debug preview.');
             }
           }
 
@@ -356,17 +344,31 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
           </div>
           <div className="bg-background p-4 rounded-xl border border-border">
             <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Auth User ID</p>
-            <p className="font-mono text-[10px] text-text-muted break-all">{user.id}</p>
+    <div className="fixed inset-0 bg-background/95 backdrop-blur-md z-50 flex flex-col p-6 animate-in fade-in duration-200">
+      <div className="flex-1 w-full max-w-md mx-auto flex flex-col pt-12">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-background p-4 rounded-xl border border-border text-center">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Local</p>
-              <p className="font-black text-xl">{loading ? '...' : stats?.local}</p>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Safe Migration</h2>
+          <p className="text-red-400 font-bold text-xs mt-2 uppercase tracking-widest">Hydrate All Local Data to Cloud</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto pb-4">
+          <div className="bg-surface border-2 border-border p-4 rounded-xl mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Local Records</span>
+              <span className="text-sm font-black text-white">{stats?.local || 0}</span>
             </div>
-            <div className="bg-background p-4 rounded-xl border border-border text-center">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Cloud</p>
-              <p className="font-black text-xl">{loading ? '...' : stats?.cloud}</p>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Cloud Records</span>
+              <span className="text-sm font-black text-white">{stats?.cloud || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold text-text-muted uppercase tracking-widest text-[var(--ink)]">Projects Records</span>
+              <span className="text-sm font-black text-[var(--ink)]">{projectCount}</span>
             </div>
           </div>
           
@@ -402,16 +404,25 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
                   {progressState.errorDetails}
                 </div>
               )}
-              {debugPayload && (
-                <div className="mt-2 pt-2 border-t border-accent/30 text-accent">
-                  <div className="font-bold mb-1">Diagnostic JSON Payload:</div>
-                  <textarea 
-                    readOnly 
-                    className="w-full bg-black/50 text-accent font-mono text-[10px] p-2 rounded border border-accent/20 h-48 focus:outline-none"
-                    value={debugPayload}
-                  />
-                </div>
-              )}
+            </div>
+          )}
+
+          {debugPayload && (
+            <div className="mt-4 p-4 rounded-xl border-2 border-accent/30 bg-surface">
+              <div className="flex justify-between items-center mb-2">
+                <div className="font-bold text-accent text-xs uppercase tracking-widest">Diagnostic JSON Payload</div>
+                <button 
+                  onClick={copyToClipboard}
+                  className="bg-accent text-black px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest active:scale-95"
+                >
+                  Copy JSON
+                </button>
+              </div>
+              <textarea 
+                readOnly 
+                className="w-full bg-black/80 text-accent font-mono text-[10px] p-3 rounded-lg border border-accent/20 h-[300px] focus:outline-none"
+                value={debugPayload}
+              />
             </div>
           )}
         </div>
@@ -419,23 +430,22 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
         {progressState.status === 'idle' && (
           <div className="text-xs text-text-muted mb-4 text-center font-bold">
             <p>This will directly push all {stats?.local || 0} local records to the cloud and report any errors immediately.</p>
-            <p className="mt-1 text-[10px] text-[var(--ink)]">Local projects remaining: {projectCount}</p>
           </div>
         )}
 
         <div className="flex flex-col gap-2 mt-auto">
           {progressState.status !== 'success' && (
             <>
-              <button onClick={() => handleHydrate(true, false, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={() => handleHydrate(true, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 1. Test Profile Record
               </button>
-              <button onClick={() => handleHydrate(false, true, false)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={() => handleHydrate(false, true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-accent/50 hover:border-accent text-accent py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 2. Test Foods Record
               </button>
-              <button onClick={() => handleHydrate(false, false, true)} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+              <button onClick={handleAuditProjects} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 3. Audit Projects Record
               </button>
-              <button onClick={() => handleHydrate(false, false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
+              <button onClick={() => handleHydrate(false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
                 4. Hydrate All Data
               </button>
             </>
