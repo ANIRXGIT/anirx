@@ -365,6 +365,65 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     }
   };
 
+  const handleFullDiagnostic = async () => {
+    try {
+      setHydrating(true);
+      setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
+      const { db } = await import('../../db/dexie');
+      const { supabase } = await import('../../lib/supabase');
+      
+      const tables = db.tables.filter(t => !['sync_queue', 'sync_cursors', 'local_media'].includes(t.name));
+      const results: any[] = [];
+      
+      for (const table of tables) {
+        const records = await table.toArray();
+        const userRecords = records.filter(r => r.user_id === user.id);
+        
+        if (userRecords.length > 0) {
+          setProgressState(s => ({ ...s, currentTable: table.name, currentRecord: 'Checking Supabase...' }));
+          
+          let cloudExists = 'YES';
+          let pkType = 'unknown';
+          let errorMsg = undefined;
+          
+          try {
+            const { error: checkError } = await supabase.from(table.name).select('id').limit(1);
+            if (checkError) {
+              if (checkError.code === '42P01') {
+                cloudExists = 'NO (relation does not exist)';
+              } else if (checkError.message?.includes('column "id" does not exist')) {
+                cloudExists = 'YES';
+                pkType = 'Missing "id" column';
+              } else {
+                cloudExists = `ERROR: ${checkError.message}`;
+              }
+              errorMsg = checkError.message;
+            } else {
+              pkType = 'id exists (UUID/TEXT)'; // Supabase doesn't easily return schema types in select
+            }
+          } catch (e: any) {
+            cloudExists = 'NETWORK ERROR';
+          }
+
+          results.push({
+            entity: table.name,
+            local_count: userRecords.length,
+            cloud_exists: cloudExists,
+            sample_keys: Object.keys(userRecords[0]).join(', ')
+          });
+        }
+      }
+      
+      setDebugPayload(JSON.stringify({ DIAGNOSTIC_REPORT: results }, null, 2));
+      setProgressState(s => ({ ...s, status: 'error', errorDetails: 'Diagnostic complete.' }));
+      setHydrating(false);
+    } catch (e: any) {
+      setDebugPayload('ERROR RUNNING DIAGNOSTIC: ' + e.message);
+      setProgressState(s => ({ ...s, status: 'error', errorDetails: 'Diagnostic failed.' }));
+      setHydrating(false);
+    }
+  };
+
   const copyToClipboard = () => {
     if (debugPayload) {
       navigator.clipboard.writeText(debugPayload)
@@ -475,8 +534,11 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
               <button onClick={handleAuditProjects} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
                 3. Audit Projects Record
               </button>
+              <button onClick={handleFullDiagnostic} disabled={hydrating || loading} className="w-full bg-surface border-2 border-[var(--ink)] hover:border-white text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 transition-colors">
+                4. Full Schema Diagnostic
+              </button>
               <button onClick={() => handleHydrate(false, false)} disabled={hydrating || loading} className="w-full bg-accent border-2 border-accent text-white py-3 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
-                4. Hydrate All Data
+                5. Hydrate All Data
               </button>
             </>
           )}
