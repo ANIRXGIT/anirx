@@ -1,0 +1,2 @@
+import { LocalNotifications } from '@capacitor/local-notifications';
+export async function requestNotificationPermission() { try { await LocalNotifications.requestPermissions(); } catch (e) { console.log('Notifications not supported'); } }

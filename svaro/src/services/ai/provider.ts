@@ -1,0 +1,1 @@
+export async function generateAIRecommendation(_context: any) { return null; } // Optional AI hook

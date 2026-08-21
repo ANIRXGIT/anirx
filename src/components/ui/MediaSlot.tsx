@@ -14,11 +14,20 @@ export function MediaSlot({
   className = "",
   sizes = "(max-width: 768px) 100vw, 50vw",
   priority = false,
+  hold = false,
+  preload = "metadata",
 }: {
   asset: MediaAsset;
   className?: string;
   sizes?: string;
   priority?: boolean;
+  /**
+   * Video behavior: play the shot ONCE and rest on its final frame.
+   * Used by the hero — the move ends on the face, and the face stays.
+   */
+  hold?: boolean;
+  /** Hero media is the LCP — raise to "auto". Everything else stays "metadata". */
+  preload?: "auto" | "metadata" | "none";
 }) {
   if (asset.available && asset.kind === "image") {
     return (
@@ -36,9 +45,9 @@ export function MediaSlot({
           aria-label={asset.alt}
           autoPlay
           muted
-          loop
+          loop={!hold}
           playsInline
-          preload="metadata"
+          preload={preload}
           className="h-full w-full object-cover"
         />
       </span>

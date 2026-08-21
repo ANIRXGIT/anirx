@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Nav } from "@/components/chrome/Nav";
 import { site } from "@/content/site";
 import { SmoothScroll } from "@/motion/SmoothScroll";
 import { fontVariables } from "./fonts";
@@ -47,8 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full">
         <script dangerouslySetInnerHTML={{ __html: modeBootstrap }} />
         <SmoothScroll />
-        <Nav />
-        <main>{children}</main>
+        {children}
       </body>
     </html>
   );

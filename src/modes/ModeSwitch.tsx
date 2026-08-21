@@ -3,7 +3,6 @@
 import { Mode, setVisualMode, useVisualMode } from "./modes";
 
 const MODES: { id: Mode; label: string; hint: string }[] = [
-  { id: "day", label: "DAY", hint: "Bright editorial" },
   { id: "night", label: "NIGHT", hint: "Dark cinematic" },
   { id: "cinema", label: "CINEMA", hint: "Full immersion" },
 ];

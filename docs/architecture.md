@@ -80,11 +80,19 @@ entry is THE VAULT. More will surface. No footnotes anywhere.
 
 **WHAT** — Four acts: hero → 7 frames → lanes → doors.
 **WHY** — The person lands within ~8 seconds; everything after deepens craft.
-**HOW** — `SceneHero` is a *timed* autoplay sequence (mark → iris opens →
-face clears → ANIRUDH SHARMA → role → statement), scroll-locked, skippable
-by any input, once per session; no-JS/reduced-motion render the final state.
-`SceneFrames` is ONE cinematic object: a viewfinder holding the portrait,
-scrubbed through FRAME → LIGHT → MOTION → CUT → COLOR → SOUND → STORY with
-real process metadata (PROCESS / TC timecode / FR counter). `SceneLanes`
-pairs the index rows with a sticky preview pane per lane. The whole homepage
-runs on ≤ 3 personal assets (budget: `public/media/ASSETS.md`).
+**HOW** — The hero is THE OBJECT (`components/experience/object/
+AnirxObject.tsx`): seven plates in CSS-3D depth with the portrait sealed
+inside, ANIRUDH SHARMA at ~10.5vw around it; timed opening, skippable,
+once per session (approved composition — do not replace). After it, no
+single system carries the page: `SceneWorlds` is one continuous
+environment — seven full-viewport rooms (letterboxed field, aligned
+strata, ruled grid, breathing word, assembling bars, expressive crop,
+lateral streaks) in the worlds' token light, closing on the statement.
+`SceneArtifacts` turns ASTRA / HOSTELMART / ANIRX into 100svh chapters
+with per-project tone atmospheres (only real repo data). `SceneMake` is
+a sticky 235svh contact end-title (MAKE → SOMETHING → WITH ME. →
+invitation → email + channels). `SceneSignature` signs the end-card:
+ANIRX ~24vw, hollow → filled by scroll. `SceneVaultDoor` is a 235svh
+collapse into the sealed door + the small-print footer.
+Reduced/no-JS always read every chapter complete. ≤ 3 personal assets
+(budget: `public/media/ASSETS.md`; the 7 stays silent).

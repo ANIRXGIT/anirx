@@ -63,8 +63,9 @@ html[data-mode="night"] {
   --tone-gold: #e8b23c;
   --lift: 0 24px 70px -32px rgb(0 0 0 / 0.8);
   --atmosphere:
-    radial-gradient(90% 55% at 50% -10%, rgb(105 213 216 / 0.05), transparent 60%),
-    radial-gradient(70% 50% at 85% 110%, rgb(139 41 64 / 0.09), transparent 65%);
+    radial-gradient(70% 55% at 18% 8%, rgb(105 213 216 / 0.06), transparent 55%),
+    radial-gradient(80% 60% at 88% 105%, rgb(139 41 64 / 0.13), transparent 65%),
+    radial-gradient(50% 40% at 4% 95%, rgb(216 121 66 / 0.04), transparent 50%);
   color-scheme: dark;
 }
 
@@ -108,7 +109,7 @@ html[data-mode="cinema"] {
   --tone-ember: #d87942;
   --tone-gold: #e8b23c;
   --lift: 0 24px 70px -32px rgb(0 0 0 / 0.9);
-  --atmosphere: none;
+  --atmosphere: radial-gradient(ellipse 90% 80% at 50% 50%, transparent 55%, rgb(0 0 0 / 0.45) 100%);
   color-scheme: dark;
 }
 
@@ -223,10 +224,241 @@ body {
 }
 
 /* ============================================================
-   HERO — slit state is JS-only; no-JS = fully open
+   HERO — ENTERING ANIRX (v5)
+   While the opening sequence plays, the chrome steps outside the room.
    ============================================================ */
-.hero-media.js-closed {
-  clip-path: inset(0 calc(100% - 6px) 0 0);
+.chrome-ui {
+  transition: opacity 0.6s var(--ease-luxe);
+}
+html[data-intro="playing"] .chrome-ui {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The scroll cue — a slow draw of light through the track, not a bounce. */
+@keyframes hero-cue {
+  0% { transform: translateY(-100%); }
+  55% { transform: translateY(300%); }
+  100% { transform: translateY(300%); }
+}
+
+/* ============================================================
+   THE OBJECT (v5) — seven plates standing in depth.
+   The resting monolith is pure CSS (SSR/no-JS complete);
+   scenes only transform it from the pose functions in
+   src/components/experience/object/AnirxObject.tsx.
+   ============================================================ */
+.obj-stage {
+  --obj-w: clamp(160px, 48vw, 200px);
+  position: absolute;
+  inset: 0;
+  perspective: 1500px;
+  perspective-origin: 50% 42%;
+  pointer-events: none;
+}
+
+/* scene-level placement offsets */
+.obj-stage--hero { --obj-ox: 18vw; --obj-oy: -24svh; --obj-w: clamp(130px, 40vw, 180px); }
+@media (min-width: 768px) {
+  .obj-stage--hero { --obj-ox: 10.5vw; --obj-oy: -5svh; --obj-w: clamp(230px, 21vw, 400px); }
+}
+
+.obj-tilt {
+  position: absolute;
+  left: calc(50% + var(--obj-ox, 0px));
+  top: calc(50% + var(--obj-oy, 0px));
+  width: var(--obj-w);
+  height: calc(var(--obj-w) * 1.55);
+  transform: translate(-50%, -50%);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.obj-spin {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: obj-drift 16s ease-in-out infinite alternate;
+}
+@keyframes obj-drift {
+  from { transform: rotateY(-12deg) rotateX(1.2deg); }
+  to { transform: rotateY(-5deg) rotateX(-1deg); }
+}
+
+.obj-plate {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    168deg,
+    color-mix(in srgb, var(--ink) 5%, var(--canvas-2)),
+    var(--canvas) 78%
+  );
+  border: 1px solid color-mix(in srgb, var(--line) 62%, transparent);
+  box-shadow: 0 34px 90px -44px rgb(0 0 0 / 0.6);
+  will-change: transform;
+  transition: border-color 1.1s var(--ease-luxe);
+}
+/* the left edge catching the key light */
+.obj-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--ink) 55%, transparent),
+    transparent
+  );
+  opacity: 0.22;
+}
+
+/* the tilted dark plates the portrait stands between */
+.obj-plate--dark {
+  background: linear-gradient(
+    158deg,
+    color-mix(in srgb, var(--ink) 3.5%, var(--canvas-2)),
+    var(--canvas) 84%
+  );
+  border-color: color-mix(in srgb, var(--line) 45%, transparent);
+}
+
+/* the single drawn line crossing a dark plate */
+.obj-panel-cut {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 165%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--ink) 24%, transparent) 32%,
+    color-mix(in srgb, var(--ink) 24%, transparent) 68%,
+    transparent
+  );
+  transform: translate(-50%, -50%) rotate(28deg);
+}
+
+/* the person inside the stack */
+.obj-portrait {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+}
+.obj-portrait img { filter: contrast(1.06) saturate(0.92); }
+.obj-veil {
+  position: absolute;
+  inset: 0;
+  background: var(--canvas);
+  opacity: 0.88;
+}
+
+/* the pool of light the object stands in */
+.obj-floor {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--obj-w) * 3);
+  height: calc(var(--obj-w) * 3);
+  transform: translate(-50%, -50%) rotateX(84deg) translateZ(calc(var(--obj-w) * -0.66));
+  background: radial-gradient(closest-side, var(--accent-soft), transparent 72%);
+  filter: blur(18px);
+  opacity: 0.85;
+}
+
+/* DAY — STUDIO: plates become paper, light gets warmer restraint */
+html[data-mode="day"] .obj-plate {
+  background: linear-gradient(
+    168deg,
+    color-mix(in srgb, var(--ink) 4%, var(--canvas-2)),
+    var(--canvas) 78%
+  );
+  box-shadow: 0 26px 70px -36px rgb(67 17 29 / 0.3);
+}
+html[data-mode="day"] .obj-portrait img { filter: contrast(1.04) saturate(1); }
+
+/* ============================================================
+   THE WORLD — environments, not cards. One room per world;
+   the change is in light, structure and motion, never in chrome.
+   ============================================================ */
+.world-env {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+[data-world="film"] .world-env {
+  background:
+    radial-gradient(130% 90% at 50% 108%, color-mix(in srgb, var(--tone-accent) 14%, transparent), transparent 62%),
+    radial-gradient(90% 60% at 50% -10%, color-mix(in srgb, var(--ink) 6%, transparent), transparent 55%);
+}
+[data-world="edit"] .world-env {
+  background: radial-gradient(110% 80% at 20% 50%, color-mix(in srgb, var(--tone-data) 14%, transparent), transparent 60%);
+}
+[data-world="code"] .world-env {
+  background: radial-gradient(100% 80% at 80% 20%, color-mix(in srgb, var(--tone-tech) 13%, transparent), transparent 58%);
+}
+[data-world="ai"] .world-env {
+  background:
+    radial-gradient(60% 50% at 50% 56%, color-mix(in srgb, var(--tone-tech) 12%, transparent), transparent 66%),
+    radial-gradient(90% 70% at 50% 120%, color-mix(in srgb, var(--tone-accent) 10%, transparent), transparent 60%);
+}
+[data-world="build"] .world-env {
+  background: radial-gradient(120% 90% at 50% 118%, color-mix(in srgb, var(--tone-gold) 15%, transparent), transparent 62%);
+}
+[data-world="create"] .world-env {
+  background:
+    radial-gradient(70% 60% at 30% 40%, color-mix(in srgb, var(--tone-accent) 17%, transparent), transparent 64%),
+    radial-gradient(70% 60% at 74% 62%, color-mix(in srgb, var(--tone-gold) 12%, transparent), transparent 62%);
+}
+[data-world="sport"] .world-env {
+  background: radial-gradient(130% 70% at 85% 50%, color-mix(in srgb, var(--tone-ember) 15%, transparent), transparent 62%);
+}
+[data-world="do"] .world-env {
+  background:
+    radial-gradient(100% 70% at 12% 50%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
+    radial-gradient(80% 60% at 88% 80%, color-mix(in srgb, var(--tone-data) 10%, transparent), transparent 55%);
+}
+
+/* FILM — the shaft of light that keeps traveling the screen */
+@keyframes world-streak {
+  from { transform: translateX(-22%); }
+  to { transform: translateX(22%); }
+}
+
+/* AI — letters thinking */
+@keyframes ai-breath {
+  from { transform: translateY(0.025em); opacity: 0.68; }
+  to { transform: translateY(-0.045em); opacity: 1; }
+}
+[data-world="ai"] [data-letter] {
+  display: inline-block;
+  animation: ai-breath 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--d, 0) * 0.35s);
+}
+
+/* ============================================================
+   THE ARTIFACTS — title hollows that fill when approached.
+   ============================================================ */
+[data-art] { --art-tone: var(--accent-hi); }
+.art-title {
+  color: transparent;
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ink) 82%, transparent);
+  transition:
+    color 0.6s var(--ease-luxe),
+    -webkit-text-stroke-color 0.6s var(--ease-luxe);
+}
+[data-art]:hover .art-title,
+[data-art]:focus-within .art-title {
+  color: var(--art-tone);
+  -webkit-text-stroke-color: transparent;
+}
+@media (hover: none) {
+  .art-title {
+    color: var(--ink);
+    -webkit-text-stroke-color: transparent;
+  }
 }
 
 /* DAY material — print matte on media, never on the background */
@@ -246,39 +478,6 @@ html[data-mode="day"] .rule-double {
 }
 html[data-mode="cinema"] [data-cine-scale] {
   transform: scale(1.1);
-}
-
-/* ============================================================
-   THE 7 FRAMES — one object, one subject.
-   CSS defaults = resting at FRAME (no-JS state). JS starts there.
-   ============================================================ */
-.frame-object {
-  position: relative;
-  background: var(--canvas-2);
-  border: 1px solid var(--line);
-  box-shadow: var(--lift);
-  overflow: hidden;
-}
-.frame-slice {
-  position: absolute;
-  inset: 0;
-  will-change: transform;
-}
-[data-frame-word] {
-  opacity: 0;
-  transform: translateY(100%);
-}
-[data-frame-word]:first-of-type {
-  opacity: 1;
-  transform: none;
-}
-[data-fsweep],
-[data-fgrade],
-[data-fwave],
-[data-fstory],
-[data-fseam],
-[data-fplayhead] {
-  opacity: 0;
 }
 
 /* ============================================================
