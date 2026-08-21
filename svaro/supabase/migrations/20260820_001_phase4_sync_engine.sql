@@ -78,7 +78,7 @@ DECLARE
     item jsonb;
     mut_id uuid;
     tbl text;
-    rec_id uuid;
+    rec_id text;
     op text;
     rec_data jsonb;
     inc_version bigint;
@@ -91,7 +91,7 @@ BEGIN
     FOR item IN SELECT * FROM jsonb_array_elements(payload) LOOP
         mut_id := (item->>'mutation_id')::uuid;
         tbl := item->>'entity_type';
-        rec_id := (item->>'entity_id')::uuid;
+        rec_id := item->>'entity_id';
         op := item->>'operation';
         rec_data := item->'payload';
         inc_version := COALESCE((rec_data->>'version')::bigint, 1);
@@ -104,7 +104,7 @@ BEGIN
 
         BEGIN
             -- 2. Fetch existing version dynamically
-            EXECUTE format('SELECT version FROM public.%I WHERE id = $1', tbl) INTO existing_version USING rec_id;
+            EXECUTE format('SELECT version FROM public.%I WHERE id::text = $1', tbl) INTO existing_version USING rec_id;
 
             -- 3. Version Check / Conflict Resolution
             IF existing_version IS NOT NULL THEN
