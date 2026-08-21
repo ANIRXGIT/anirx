@@ -125,6 +125,24 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
   const [stats, setStats] = useState<{ local: number, cloud: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [hydrating, setHydrating] = useState(false);
+  
+  const [progressState, setProgressState] = useState<{
+    status: 'idle' | 'running' | 'verifying' | 'error' | 'success';
+    queued: number;
+    success: number;
+    failed: number;
+    currentTable: string;
+    currentRecord: string;
+    errorDetails: string;
+  }>({
+    status: 'idle',
+    queued: 0,
+    success: 0,
+    failed: 0,
+    currentTable: '-',
+    currentRecord: '-',
+    errorDetails: ''
+  });
 
   useEffect(() => {
     async function loadStats() {
@@ -140,7 +158,6 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
         }
 
         let cloudCount = 0;
-        // Check profiles table as a proxy for cloud data existence
         const { count } = await supabase
           .from('profiles')
           .select('id', { count: 'exact', head: true })
@@ -149,6 +166,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
         if (count) cloudCount = count;
 
         setStats({ local: localCount, cloud: cloudCount });
+        setProgressState(s => ({ ...s, queued: localCount }));
       } catch (e) {
         console.error(e);
       } finally {
@@ -160,52 +178,170 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
 
   const handleHydrate = async () => {
     setHydrating(true);
+    setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
     try {
-      const { SyncEngine } = await import('../../sync/SyncEngine');
-      await SyncEngine.forceUploadAllLocalData(user.id);
-      alert('Force sync queued successfully. Data is uploading in the background.');
+      const { db } = await import('../../db/dexie');
+      const { supabase } = await import('../../lib/supabase');
+      
+      // Collect all records
+      const allRecords: { table: string; record: any }[] = [];
+      for (const table of db.tables) {
+        if (['sync_queue', 'sync_cursors', 'local_media'].includes(table.name)) continue;
+        const records = await table.toArray();
+        for (const record of records) {
+          if (record.user_id === user.id) {
+            allRecords.push({ table: table.name, record });
+          }
+        }
+      }
+
+      // Process in batches
+      const BATCH_SIZE = 25;
+      for (let i = 0; i < allRecords.length; i += BATCH_SIZE) {
+        const batch = allRecords.slice(i, i + BATCH_SIZE);
+        
+        setProgressState(s => ({ 
+          ...s, 
+          currentTable: batch[0].table, 
+          currentRecord: `Batch ${Math.floor(i/BATCH_SIZE) + 1} (${i} to ${i + batch.length})` 
+        }));
+
+        const payload = batch.map(b => ({
+          mutation_id: `hydrate_${Date.now()}_${b.record.id}`,
+          entity_type: b.table,
+          entity_id: b.record.id,
+          operation: 'UPSERT',
+          payload: b.record
+        }));
+
+        const { data, error } = await supabase.rpc('sync_push', { payload });
+
+        if (error) {
+          throw new Error(`RPC ERROR: [${error.code}] ${error.message} \nDetails: ${error.details || 'None'}`);
+        }
+
+        const results = data as any[];
+        let batchErrors = 0;
+        let batchSuccess = 0;
+
+        for (const res of results) {
+          if (res.status === 'ERROR') {
+            batchErrors++;
+            console.error('Record error:', res);
+            throw new Error(`RECORD ERROR in table ${batch.find(b => b.record.id === res.entity_id)?.table}:\n[${res.error?.code}] ${res.error?.message}`);
+          } else {
+            batchSuccess++;
+          }
+        }
+
+        setProgressState(s => ({ 
+          ...s, 
+          success: s.success + batchSuccess, 
+          failed: s.failed + batchErrors 
+        }));
+      }
+
+      // Verify
+      setProgressState(s => ({ ...s, status: 'verifying', currentTable: 'profiles', currentRecord: 'Verifying Cloud State' }));
+      
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id);
+        
+      if (verifyError) {
+        throw new Error(`Verification query failed: [${verifyError.code}] ${verifyError.message}`);
+      }
+      
+      if (!verifyData || verifyData.length === 0) {
+        throw new Error(`Verification failed: Supabase still returned 0 profile rows for UUID ${user.id} after upload. Sync is fundamentally broken.`);
+      }
+
+      setProgressState(s => ({ ...s, status: 'success' }));
+      alert('Hydration and Verification Successful!');
       onClose();
+
     } catch (e: any) {
-      alert('Hydration failed: ' + e.message);
+      setProgressState(s => ({ ...s, status: 'error', errorDetails: e.message || String(e) }));
       setHydrating(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur flex items-center justify-center p-4">
-      <div className="bg-surface w-full max-w-sm rounded-3xl border border-border p-6 shadow-2xl">
+      <div className="bg-surface w-full max-w-sm rounded-3xl border border-border p-6 shadow-2xl flex flex-col max-h-[90vh]">
         <h2 className="font-black text-xl mb-4 text-center uppercase tracking-widest text-accent">Safe Migration</h2>
-        <div className="space-y-4 mb-6 text-sm">
+        
+        <div className="overflow-y-auto space-y-4 mb-6 text-sm flex-1">
           <div className="bg-background p-4 rounded-xl border border-border">
             <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Authenticated Email</p>
             <p className="font-bold break-all">{user.email}</p>
           </div>
           <div className="bg-background p-4 rounded-xl border border-border">
             <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Auth User ID</p>
-            <p className="font-mono text-xs text-text-muted break-all">{user.id}</p>
+            <p className="font-mono text-[10px] text-text-muted break-all">{user.id}</p>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-background p-4 rounded-xl border border-border text-center">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Local Records</p>
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Local</p>
               <p className="font-black text-xl">{loading ? '...' : stats?.local}</p>
             </div>
             <div className="bg-background p-4 rounded-xl border border-border text-center">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Cloud Profiles</p>
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Cloud</p>
               <p className="font-black text-xl">{loading ? '...' : stats?.cloud}</p>
             </div>
           </div>
+          
+          {progressState.status !== 'idle' && (
+            <div className="bg-background p-4 rounded-xl border border-accent/20 space-y-3 font-mono text-[10px]">
+              <div className="flex justify-between border-b border-border pb-1">
+                <span className="text-text-muted">Status:</span>
+                <span className={progressState.status === 'error' ? 'text-red-500 font-bold' : 'text-accent font-bold uppercase'}>{progressState.status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-muted">Queued:</span>
+                <span>{progressState.queued}</span>
+              </div>
+              <div className="flex justify-between text-green-500">
+                <span className="text-text-muted">Success:</span>
+                <span>{progressState.success}</span>
+              </div>
+              <div className="flex justify-between text-red-500">
+                <span className="text-text-muted">Failed:</span>
+                <span>{progressState.failed}</span>
+              </div>
+              <div className="flex flex-col mt-2 pt-2 border-t border-border">
+                <span className="text-text-muted">Current Table:</span>
+                <span className="truncate">{progressState.currentTable}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-text-muted">Current Op:</span>
+                <span className="truncate">{progressState.currentRecord}</span>
+              </div>
+              
+              {progressState.status === 'error' && (
+                <div className="mt-2 pt-2 border-t border-red-500/30 text-red-500 break-all whitespace-pre-wrap font-bold">
+                  {progressState.errorDetails}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
-        <p className="text-xs text-text-muted mb-6 text-center font-bold">
-          This action will safely queue all {stats?.local || 0} local records for upload to this specific cloud account. It will not overwrite newer cloud data.
-        </p>
+        {progressState.status === 'idle' && (
+          <p className="text-xs text-text-muted mb-4 text-center font-bold">
+            This will directly push all {stats?.local || 0} local records to the cloud and report any errors immediately.
+          </p>
+        )}
 
-        <div className="flex gap-4">
-          <button onClick={onClose} disabled={hydrating} className="flex-1 bg-transparent border-2 border-border py-4 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50">Cancel</button>
-          <button onClick={handleHydrate} disabled={hydrating || loading} className="flex-1 bg-accent border-2 border-accent text-white py-4 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
-            {hydrating ? 'Queuing...' : 'Confirm'}
-          </button>
+        <div className="flex gap-4 mt-auto">
+          <button onClick={onClose} disabled={hydrating && progressState.status !== 'error'} className="flex-1 bg-transparent border-2 border-border py-4 rounded-xl font-bold active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50">Cancel</button>
+          {progressState.status !== 'success' && (
+            <button onClick={handleHydrate} disabled={hydrating || loading} className="flex-1 bg-accent border-2 border-accent text-white py-4 rounded-xl font-black active:scale-95 text-xs uppercase tracking-widest shadow-lg disabled:opacity-50">
+              {hydrating ? (progressState.status === 'error' ? 'Retry' : 'Working...') : 'Start'}
+            </button>
+          )}
         </div>
       </div>
     </div>
