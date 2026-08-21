@@ -243,14 +243,19 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
 
           // DEBUG PAUSE
           if (testMode || (i === 0 && Object.keys(tableGroups).indexOf(tableName) === 0)) {
-            const debugPayload = payload.map((p, idx) => ({
-              TABLE: p.entity_type,
-              ENTITY_TYPE: p.entity_type,
-              ENTITY_ID: p.entity_id,
-              ORIGINAL_LOCAL_ID: batchRecords[idx].id,
-              MUTATION_ID: p.mutation_id,
-              USER_ID: p.payload.user_id
-            }));
+            const debugPayload = payload.map((p, idx) => {
+              const safePayload = { ...p.payload };
+              if (safePayload.pin) safePayload.pin = '***HIDDEN***';
+              return {
+                mutation_id: p.mutation_id,
+                entity_type: p.entity_type,
+                entity_id: p.entity_id,
+                original_local_id: batchRecords[idx].id,
+                user_id: p.payload.user_id,
+                operation: p.operation,
+                payload: safePayload
+              };
+            });
             const proceed = window.confirm(`DEBUG PREVIEW BEFORE RPC:\n\n${JSON.stringify(debugPayload, null, 2)}\n\nProceed with RPC call?`);
             if (!proceed) {
               throw new Error('User aborted at debug preview.');
@@ -260,7 +265,7 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
           const { data, error } = await supabase.rpc('sync_push', { payload });
 
           if (error) {
-            throw new Error(`RPC ERROR: [${error.code}] ${error.message} \nDetails: ${error.details || 'None'}`);
+            throw new Error(`RPC ERROR: [${error.code}] ${error.message} \nDetails: ${error.details || 'None'} \nHint: ${error.hint || 'None'}`);
           }
 
           const results = data as any[];
@@ -270,8 +275,9 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
           for (const res of results) {
             if (res.status === 'ERROR') {
               batchErrors++;
-              console.error('Record error:', res);
-              throw new Error(`RECORD ERROR in table ${tableName}:\n[${res.error?.code}] ${res.error?.message}`);
+              console.error('Record error object:', res);
+              const errorStr = typeof res.error === 'string' ? res.error : JSON.stringify(res.error);
+              throw new Error(`RECORD ERROR in table ${tableName}:\n${errorStr}`);
             } else {
               batchSuccess++;
             }
