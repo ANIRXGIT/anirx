@@ -123,7 +123,7 @@ BEGIN
             rec_data := rec_data || jsonb_build_object('change_sequence', seq);
 
             -- 4. Dynamic Upsert
-            SELECT string_agg(column_name || ' = EXCLUDED.' || column_name, ', ')
+            SELECT string_agg(quote_ident(column_name) || ' = EXCLUDED.' || quote_ident(column_name), ', ')
             INTO set_clause
             FROM information_schema.columns
             WHERE table_schema = 'public' AND table_name = tbl AND column_name != 'id';
