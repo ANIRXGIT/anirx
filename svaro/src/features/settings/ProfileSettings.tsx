@@ -176,6 +176,20 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
     loadStats();
   }, [user.id]);
 
+  const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+  const generateStableUuid = async (input: string) => {
+    if (isUuid(input)) return input;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hash = await crypto.subtle.digest('SHA-1', data);
+    const bytes = new Uint8Array(hash);
+    bytes[6] = (bytes[6] & 0x0f) | 0x50;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
+  };
+
   const handleHydrate = async (testMode: boolean = false) => {
     setHydrating(true);
     setProgressState(s => ({ ...s, status: 'running', errorDetails: '', success: 0, failed: 0 }));
@@ -183,73 +197,92 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
       const { db } = await import('../../db/dexie');
       const { supabase } = await import('../../lib/supabase');
       
-      // Collect records
-      const allRecords: { table: string; record: any }[] = [];
+      const tableGroups: Record<string, any[]> = {};
       
       if (testMode) {
         // TEST MODE: Only upload the ONE profile record
         const profiles = await db.profiles.toArray();
         const profile = profiles.find(p => p.user_id === user.id);
         if (!profile) throw new Error("No profile record found in local IndexedDB to test.");
-        allRecords.push({ table: 'profiles', record: profile });
+        tableGroups['profiles'] = [profile];
       } else {
         // FULL MODE
         for (const table of db.tables) {
           if (['sync_queue', 'sync_cursors', 'local_media'].includes(table.name)) continue;
           const records = await table.toArray();
-          for (const record of records) {
-            if (record.user_id === user.id) {
-              allRecords.push({ table: table.name, record });
-            }
-          }
+          tableGroups[table.name] = records.filter(r => r.user_id === user.id);
         }
       }
 
-      // Process in batches
-      const BATCH_SIZE = 25;
-      for (let i = 0; i < allRecords.length; i += BATCH_SIZE) {
-        const batch = allRecords.slice(i, i + BATCH_SIZE);
+      for (const [tableName, records] of Object.entries(tableGroups)) {
+        if (records.length === 0) continue;
         
-        setProgressState(s => ({ 
-          ...s, 
-          currentTable: batch[0].table, 
-          currentRecord: testMode ? 'TEST MODE (1 Record)' : `Batch ${Math.floor(i/BATCH_SIZE) + 1} (${i} to ${i + batch.length})` 
-        }));
+        const BATCH_SIZE = 25;
+        for (let i = 0; i < records.length; i += BATCH_SIZE) {
+          const batchRecords = records.slice(i, i + BATCH_SIZE);
+          
+          setProgressState(s => ({ 
+            ...s, 
+            currentTable: tableName, 
+            currentRecord: testMode ? 'TEST MODE (1 Record)' : `Batch ${Math.floor(i/BATCH_SIZE) + 1} (${i} to ${i + batchRecords.length})` 
+          }));
 
-        const payload = batch.map(b => ({
-          // RPC strictly requires mutation_id to be a valid UUID
-          mutation_id: crypto.randomUUID(), 
-          entity_type: b.table,
-          entity_id: b.record.id,
-          operation: 'UPSERT',
-          payload: b.record
-        }));
+          const payload = await Promise.all(batchRecords.map(async b => {
+            // Map legacy string IDs (e.g. goal_1787...) to deterministic UUIDs for PostgreSQL compatibility
+            const validUuidId = await generateStableUuid(b.id);
+            const mappedRecord = { ...b, id: validUuidId };
 
-        const { data, error } = await supabase.rpc('sync_push', { payload });
+            return {
+              mutation_id: crypto.randomUUID(), 
+              entity_type: tableName,
+              entity_id: validUuidId,
+              operation: 'UPSERT',
+              payload: mappedRecord
+            };
+          }));
 
-        if (error) {
-          throw new Error(`RPC ERROR: [${error.code}] ${error.message} \nDetails: ${error.details || 'None'}`);
-        }
-
-        const results = data as any[];
-        let batchErrors = 0;
-        let batchSuccess = 0;
-
-        for (const res of results) {
-          if (res.status === 'ERROR') {
-            batchErrors++;
-            console.error('Record error:', res);
-            throw new Error(`RECORD ERROR in table ${batch.find(b => b.record.id === res.entity_id)?.table}:\n[${res.error?.code}] ${res.error?.message}`);
-          } else {
-            batchSuccess++;
+          // DEBUG PAUSE
+          if (testMode || (i === 0 && Object.keys(tableGroups).indexOf(tableName) === 0)) {
+            const debugPayload = payload.map((p, idx) => ({
+              TABLE: p.entity_type,
+              ENTITY_TYPE: p.entity_type,
+              ENTITY_ID: p.entity_id,
+              ORIGINAL_LOCAL_ID: batchRecords[idx].id,
+              MUTATION_ID: p.mutation_id,
+              USER_ID: p.payload.user_id
+            }));
+            const proceed = window.confirm(`DEBUG PREVIEW BEFORE RPC:\n\n${JSON.stringify(debugPayload, null, 2)}\n\nProceed with RPC call?`);
+            if (!proceed) {
+              throw new Error('User aborted at debug preview.');
+            }
           }
-        }
 
-        setProgressState(s => ({ 
-          ...s, 
-          success: s.success + batchSuccess, 
-          failed: s.failed + batchErrors 
-        }));
+          const { data, error } = await supabase.rpc('sync_push', { payload });
+
+          if (error) {
+            throw new Error(`RPC ERROR: [${error.code}] ${error.message} \nDetails: ${error.details || 'None'}`);
+          }
+
+          const results = data as any[];
+          let batchErrors = 0;
+          let batchSuccess = 0;
+
+          for (const res of results) {
+            if (res.status === 'ERROR') {
+              batchErrors++;
+              console.error('Record error:', res);
+              throw new Error(`RECORD ERROR in table ${tableName}:\n[${res.error?.code}] ${res.error?.message}`);
+            } else {
+              batchSuccess++;
+            }
+          }
+
+          setProgressState(s => ({ 
+            ...s, 
+            success: s.success + batchSuccess, 
+            failed: s.failed + batchErrors 
+          }));
+        }
       }
 
       // Verify
