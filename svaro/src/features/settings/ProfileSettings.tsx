@@ -409,6 +409,8 @@ function HydrateModal({ user, onClose }: { user: any, onClose: () => void }) {
             entity: table.name,
             local_count: userRecords.length,
             cloud_exists: cloudExists,
+            pk_type: pkType,
+            error_msg: errorMsg,
             sample_keys: Object.keys(userRecords[0]).join(', ')
           });
         }
