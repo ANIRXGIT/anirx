@@ -101,16 +101,18 @@ export default function ProfileSettings() {
           Save Profile
         </button>
         
-        <div className="pt-4 mt-6 border-t border-surface">
-          <h3 className="text-sm font-bold text-accent mb-2">DEVELOPER / SYNC</h3>
-          <p className="text-xs text-text-muted mb-4">If your cloud data is missing, click below to safely force upload all your local Vercel data to the cloud.</p>
-          <button
-            onClick={() => setIsHydrateModalOpen(true)}
-            className="w-full py-3 bg-surface hover:bg-surface-elevated text-text font-bold rounded-lg transition-colors border border-accent/20"
-          >
-            FORCE HYDRATE TO CLOUD
-          </button>
-        </div>
+        {useAuthStore.getState().isOwner && (
+          <div className="pt-4 mt-6 border-t border-surface">
+            <h3 className="text-sm font-bold text-accent mb-2">DEVELOPER / SYNC</h3>
+            <p className="text-xs text-text-muted mb-4">If your cloud data is missing, click below to safely force upload all your local Vercel data to the cloud.</p>
+            <button
+              onClick={() => setIsHydrateModalOpen(true)}
+              className="w-full py-3 bg-surface hover:bg-surface-elevated text-text font-bold rounded-lg transition-colors border border-accent/20"
+            >
+              FORCE HYDRATE TO CLOUD
+            </button>
+          </div>
+        )}
 
       </div>
 

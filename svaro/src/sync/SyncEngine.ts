@@ -69,8 +69,8 @@ export class SyncEngine {
       this.isSyncing = true;
 
       await MediaSync.syncMedia(userId);
-      await SyncPush.pushAll(userId);
       const pulledChanges = await SyncPull.pullAll(userId);
+      await SyncPush.pushAll(userId);
 
       if (!this.hasReconciled) {
          await SyncReconciler.sweep(userId);

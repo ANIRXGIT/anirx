@@ -141,18 +141,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   logWater: async (amountMl) => {
-    const userId = get().profile?.user_id; if(!userId) throw new Error('Unauthenticated'); await localRepo.logWater({ ...createBaseEntity(userId), amountMl, timestamp: Date.now() });
+    const userId = get().profile?.user_id; if(!userId) throw new Error('Unauthenticated'); 
+    const { getLocalYYYYMMDD } = await import('../domain/calendar/dateUtils');
+    const ds = getLocalYYYYMMDD(new Date());
+    await localRepo.logWater({ ...createBaseEntity(userId), id: `${userId}_${ds}_water`, amountMl, timestamp: Date.now() });
     set(state => ({ todayWater: state.todayWater + amountMl }));
   },
 
   logSteps: async (steps) => {
-    const userId = get().profile?.user_id; if(!userId) throw new Error('Unauthenticated'); await localRepo.logSteps({ ...createBaseEntity(userId), steps, timestamp: Date.now() });
-    const logs = await localRepo.getTodayStepLogs(get().profile?.user_id || '');
+    const userId = get().profile?.user_id; if(!userId) throw new Error('Unauthenticated'); 
+    const { getLocalYYYYMMDD } = await import('../domain/calendar/dateUtils');
+    const ds = getLocalYYYYMMDD(new Date());
+    await localRepo.logSteps({ ...createBaseEntity(userId), id: `${userId}_${ds}_steps`, steps, timestamp: Date.now() });
+    const logs = await localRepo.getTodayStepLogs(userId);
     set({ todaySteps: logs.reduce((acc, log) => acc + log.steps, 0) });
   },
 
   logWeight: async (weightKg) => {
-    const userId = get().profile?.user_id; if(!userId) throw new Error('Unauthenticated'); await localRepo.logWeight({ ...createBaseEntity(userId), weightKg, timestamp: Date.now() });
+    const userId = get().profile?.user_id; if(!userId) throw new Error('Unauthenticated'); 
+    const { getLocalYYYYMMDD } = await import('../domain/calendar/dateUtils');
+    const ds = getLocalYYYYMMDD(new Date());
+    await localRepo.logWeight({ ...createBaseEntity(userId), id: `${userId}_${ds}_weight`, weightKg, timestamp: Date.now() });
     const currentProfile = get().profile;
     if (currentProfile && currentProfile.user_id) {
       const p = await localRepo.getProfile(currentProfile.user_id);

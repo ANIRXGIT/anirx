@@ -61,7 +61,7 @@ export class SyncPull {
 
       let maxSequence = lastCursor;
 
-      await db.transaction('rw', db.table(tableName), db.sync_cursors, async () => {
+      await db.transaction('rw', db.table(tableName), db.sync_cursors, db.sync_queue, async () => {
         for (const record of safeData) {
           record.sync_state = 'SYNCED';
           (record as any).__fromSync = true;
@@ -69,9 +69,28 @@ export class SyncPull {
           if (record.change_sequence > maxSequence) {
             maxSequence = record.change_sequence;
           }
-          await db.table(tableName).put(record);
-        }
 
+          // Conflict Resolution
+          const pendingMutations = await db.sync_queue
+            .where('[table_name+record_id]')
+            .equals([tableName, record.id])
+            .toArray();
+
+          let shouldPut = true;
+          for (const mut of pendingMutations) {
+            if (mut.created_at < record.updated_at) {
+              // Cloud is newer. The local mutation is stale. Purge it.
+              await db.sync_queue.delete(mut.id);
+            } else {
+              // Local mutation is newer. Preserve optimistic UI state.
+              shouldPut = false;
+            }
+          }
+
+          if (shouldPut) {
+            await db.table(tableName).put(record);
+          }
+        }
         
         if (maxSequence > lastCursor) {
           await db.sync_cursors.put({ table_name: tableName, user_id: userId, last_change_sequence: maxSequence });

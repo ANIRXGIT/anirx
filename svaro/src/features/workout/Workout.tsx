@@ -115,12 +115,31 @@ function WorkoutPlanner() {
     setTemplates(newTemplates);
   };
 
-  const addExercise = async (exId: string) => {
+  const addExercise = async (exId: string, sets = 3, reps = '8-12') => {
     if (selectingForTemplate === null) return;
     const tmpl = templates[selectingForTemplate];
-    tmpl.exercises.push({ exerciseId: exId, sets: 3, reps: '8-12', restSeconds: 90 });
+    tmpl.exercises.push({ exerciseId: exId, sets, reps, restSeconds: 90 });
     await localRepo.saveWorkoutTemplate(tmpl);
     setSelectingForTemplate(null);
+    loadData();
+  };
+
+  const removeExercise = async (tmplIdx: number, exIdx: number) => {
+    const tmpl = templates[tmplIdx];
+    tmpl.exercises.splice(exIdx, 1);
+    await localRepo.saveWorkoutTemplate(tmpl);
+    loadData();
+  };
+
+  const [editingConfig, setEditingConfig] = useState<{tmplIdx: number, exIdx: number, sets: number, reps: string} | null>(null);
+  
+  const saveExerciseConfig = async () => {
+    if (!editingConfig) return;
+    const tmpl = templates[editingConfig.tmplIdx];
+    tmpl.exercises[editingConfig.exIdx].sets = editingConfig.sets;
+    tmpl.exercises[editingConfig.exIdx].reps = editingConfig.reps;
+    await localRepo.saveWorkoutTemplate(tmpl);
+    setEditingConfig(null);
     loadData();
   };
 
@@ -155,13 +174,16 @@ function WorkoutPlanner() {
                 {tmpl.exercises.map((ex, exIdx) => {
                   const definition = allExercises.find(e => e.id === ex.exerciseId);
                   return (
-                    <div key={exIdx} className="bg-background p-3 rounded-xl border border-border flex justify-between items-center">
+                    <div key={exIdx} onClick={() => setEditingConfig({tmplIdx: idx, exIdx, sets: ex.sets || 3, reps: ex.reps || '8-12'})} className="bg-background p-3 rounded-xl border border-border flex justify-between items-center cursor-pointer hover:border-accent/50 transition-colors">
                       <div>
                         <p className="font-bold text-sm">{definition?.name || ex.exerciseId}</p>
                         <p className="text-[10px] uppercase tracking-widest text-text-muted">
-                          {ex.sets} sets • {ex.reps} reps
+                          {ex.sets} sets   {ex.reps} reps
                         </p>
                       </div>
+                      <button onClick={(e) => { e.stopPropagation(); removeExercise(idx, exIdx); }} className="text-text-muted hover:text-red-500 p-2 transition-colors">
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   );
                 })}
@@ -174,6 +196,38 @@ function WorkoutPlanner() {
           </div>
         ))}
       </div>
+
+      {editingConfig && (
+        <div className="fixed inset-0 z-[60] bg-background/90 backdrop-blur flex items-center justify-center p-4">
+          <div className="bg-surface w-full max-w-sm rounded-3xl border border-border p-6 shadow-2xl space-y-4">
+            <h2 className="font-black text-lg uppercase">Edit Prescription</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">Sets</label>
+                <input 
+                  type="number" 
+                  value={editingConfig.sets} 
+                  onChange={e => setEditingConfig({...editingConfig, sets: Number(e.target.value)})} 
+                  className="w-full bg-background border border-border p-4 rounded-xl text-sm font-bold focus:border-accent outline-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">Reps</label>
+                <input 
+                  type="text" 
+                  value={editingConfig.reps} 
+                  onChange={e => setEditingConfig({...editingConfig, reps: e.target.value})} 
+                  className="w-full bg-background border border-border p-4 rounded-xl text-sm font-bold focus:border-accent outline-none"
+                />
+              </div>
+            </div>
+            <div className="flex gap-4 pt-4">
+              <button onClick={() => setEditingConfig(null)} className="flex-1 bg-transparent border-2 border-border py-4 rounded-xl font-bold uppercase text-xs tracking-widest">Cancel</button>
+              <button onClick={saveExerciseConfig} className="flex-1 bg-accent text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectingForTemplate !== null && (
         <ExerciseSelectorModal 
@@ -192,6 +246,8 @@ function ExerciseSelectorModal({ exercises, onSelect, onClose, onCustomCreated }
   const [search, setSearch] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [customName, setCustomName] = useState('');
+  const [customSets, setCustomSets] = useState('3');
+  const [customReps, setCustomReps] = useState('8-12');
 
   const filtered = exercises.filter((e: any) => e.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -207,7 +263,7 @@ function ExerciseSelectorModal({ exercises, onSelect, onClose, onCustomCreated }
     };
     await localRepo.saveExercise(ex);
     onCustomCreated();
-    onSelect(ex.id);
+    onSelect(ex.id, Number(customSets) || 3, customReps || '8-12');
   };
 
   return (
@@ -228,11 +284,11 @@ function ExerciseSelectorModal({ exercises, onSelect, onClose, onCustomCreated }
               />
             </div>
             <div className="overflow-y-auto flex-1 space-y-2 mb-4">
-              <button onClick={() => setIsCreating(true)} className="w-full text-left p-3 rounded-xl border border-accent/30 text-accent font-bold text-sm bg-accent/5">
+              <button onClick={() => { setIsCreating(true); setCustomName(search); }} className="w-full text-left p-3 rounded-xl border border-accent/30 text-accent font-bold text-sm bg-accent/5">
                 + Create Custom "{search}"
               </button>
               {filtered.map((ex: any) => (
-                <button key={ex.id} onClick={() => onSelect(ex.id)} className="w-full text-left p-3 rounded-xl border border-border bg-background hover:bg-surface font-bold text-sm transition-colors">
+                <button key={ex.id} onClick={() => onSelect(ex.id, 3, '8-12')} className="w-full text-left p-3 rounded-xl border border-border bg-background hover:bg-surface font-bold text-sm transition-colors">
                   {ex.name}
                 </button>
               ))}
@@ -240,13 +296,36 @@ function ExerciseSelectorModal({ exercises, onSelect, onClose, onCustomCreated }
           </>
         ) : (
           <div className="space-y-4 mb-4">
-            <input 
-              type="text" 
-              placeholder="Exercise Name" 
-              value={customName}
-              onChange={e => setCustomName(e.target.value)}
-              className="w-full bg-background border border-border p-4 rounded-xl text-sm font-bold"
-            />
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">Exercise Name</label>
+              <input 
+                type="text" 
+                placeholder="Exercise Name" 
+                value={customName}
+                onChange={e => setCustomName(e.target.value)}
+                className="w-full bg-background border border-border p-4 rounded-xl text-sm font-bold"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">Default Sets</label>
+                <input 
+                  type="number" 
+                  value={customSets}
+                  onChange={e => setCustomSets(e.target.value)}
+                  className="w-full bg-background border border-border p-4 rounded-xl text-sm font-bold focus:border-accent outline-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">Default Reps</label>
+                <input 
+                  type="text" 
+                  value={customReps}
+                  onChange={e => setCustomReps(e.target.value)}
+                  className="w-full bg-background border border-border p-4 rounded-xl text-sm font-bold focus:border-accent outline-none"
+                />
+              </div>
+            </div>
             <button onClick={handleCreateCustom} className="w-full bg-accent text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg">Save Custom</button>
           </div>
         )}
