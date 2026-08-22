@@ -18,9 +18,25 @@ export class SyncPull {
   static async pullTable(userId: string, tableName: string): Promise<boolean> {
     const limit = 1000;
     let hasChanges = false;
+    let pageCount = 0;
     while (true) {
       const cursorRecord = await db.sync_cursors.get([tableName, userId]);
-      const lastCursor = cursorRecord ? cursorRecord.last_change_sequence : 0;
+      let lastCursor = cursorRecord ? cursorRecord.last_change_sequence : 0;
+
+      // Diagnostic Cursor Reset Fix (Detect Cloud Wipes)
+      if (pageCount === 0 && lastCursor > 0) {
+        const { data: maxSeqData } = await supabase
+          .from(tableName)
+          .select('change_sequence')
+          .order('change_sequence', { ascending: false })
+          .limit(1);
+        const maxCloudSeq = maxSeqData?.[0]?.change_sequence || 0;
+        if (maxCloudSeq > 0 && lastCursor > maxCloudSeq) {
+          console.warn(`[SYNC] Stale cursor detected for ${tableName}. Local: ${lastCursor}, Cloud Max: ${maxCloudSeq}. Resetting to 0.`);
+          lastCursor = 0;
+          await db.sync_cursors.put({ table_name: tableName, user_id: userId, last_change_sequence: 0 });
+        }
+      }
 
       const { data, error } = await supabase
         .from(tableName)
@@ -36,6 +52,7 @@ export class SyncPull {
       if (!data || data.length === 0) break;
 
       hasChanges = true;
+      pageCount++;
       
       // RLS guarantees the data belongs to the user or is global.
       // We don't filter aggressively here to avoid cursor stagnation on global tables like system_config.
